@@ -1,0 +1,13 @@
+#!/bin/sh
+# Gradle startup script for UNIX
+##############################################################################
+APP_NAME="Gradle"
+APP_BASE_NAME=$(basename "$0")
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+SCRIPT_DIR=$(dirname "$0")
+GRADLE_HOME=$(dirname "$SCRIPT_DIR")
+WRAPPER_JAR="$GRADLE_HOME/gradle/wrapper/gradle-wrapper.jar"
+WRAPPER_PROPERTIES="$GRADLE_HOME/gradle/wrapper/gradle-wrapper.properties"
+
+exec java $DEFAULT_JVM_OPTS -jar "$WRAPPER_JAR" --gradle-wrapper-properties "$WRAPPER_PROPERTIES" "$@"

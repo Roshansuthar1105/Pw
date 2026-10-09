@@ -1,0 +1,15 @@
+# Netlify configuration for Angular Single Page Application (SPA)
+
+[build]
+  # Monorepo base directory for frontend
+  base = "frontend"
+  # Build command
+  command = "npm run build"
+  # Directory where Angular application builder outputs static files
+  publish = "dist/frontend/browser"
+
+# Redirect all routes to index.html with a 200 status for client-side routing (SPA fallback)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,169 @@
+<div class="items-page">
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Items Management</h1>
+      <p class="page-subtitle">Demonstrates full CRUD operations against the Spring Boot <code>/api/items</code> REST API</p>
+    </div>
+  </div>
+
+  <!-- Notification banners -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <span>{{ errorMessage() }}</span>
+      <button class="alert-close" (click)="errorMessage.set(null)">&times;</button>
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span>{{ successMessage() }}</span>
+      <button class="alert-close" (click)="successMessage.set(null)">&times;</button>
+    </div>
+  }
+
+  <div class="content-grid">
+    <!-- Form Card -->
+    <div class="card form-card">
+      <h2 class="card-title">
+        {{ editingItemId() !== null ? 'Edit Item #' + editingItemId() : 'Create New Item' }}
+      </h2>
+
+      <form (ngSubmit)="saveItem()" class="item-form">
+        <div class="form-group">
+          <label for="item-name">Item Name *</label>
+          <input
+            id="item-name"
+            type="text"
+            [ngModel]="itemName()"
+            (ngModelChange)="itemName.set($event)"
+            name="name"
+            placeholder="e.g. Modern Keyboard"
+            required
+            class="input-field"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="item-desc">Description</label>
+          <textarea
+            id="item-desc"
+            [ngModel]="itemDescription()"
+            (ngModelChange)="itemDescription.set($event)"
+            name="description"
+            rows="3"
+            placeholder="Item details and specifications"
+            class="input-field textarea-field"
+          ></textarea>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [ngModel]="itemActive()"
+              (ngModelChange)="itemActive.set($event)"
+              name="active"
+              id="item-active"
+            />
+            <span>Active Status</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()" id="btn-save-item">
+            {{ editingItemId() !== null ? 'Update Item' : 'Add Item' }}
+          </button>
+          @if (editingItemId() !== null) {
+            <button type="button" class="btn btn-secondary" (click)="resetForm()" id="btn-cancel-edit">
+              Cancel
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card list-card">
+      <div class="filter-bar">
+        <div class="search-box">
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            (keyup.enter)="onSearch()"
+            placeholder="Search items by name..."
+            class="input-field search-input"
+            id="input-search"
+          />
+          <button class="btn btn-sm btn-outline" (click)="onSearch()" id="btn-search">
+            Search
+          </button>
+        </div>
+
+        <div class="filter-actions">
+          <button
+            class="btn btn-sm"
+            [class.btn-active]="filterActiveOnly()"
+            [class.btn-outline]="!filterActiveOnly()"
+            (click)="onFilterToggle()"
+            id="btn-filter-active"
+          >
+            {{ filterActiveOnly() ? 'Showing: Active Only' : 'Filter: Active Only' }}
+          </button>
+          <button class="btn btn-sm btn-outline" (click)="loadItems()" id="btn-refresh-list">
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      @if (isLoading()) {
+        <div class="loading-container">
+          <span class="spinner"></span>
+          <p>Loading items from backend...</p>
+        </div>
+      } @else if (items().length === 0) {
+        <div class="empty-container">
+          <div class="empty-icon">📦</div>
+          <p class="empty-text">No items found</p>
+          <span class="empty-subtext">Add a new item using the form or refresh the list</span>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.id) {
+                <tr>
+                  <td class="font-mono">#{{ item.id }}</td>
+                  <td class="item-name-cell">{{ item.name }}</td>
+                  <td class="item-desc-cell">{{ item.description || '-' }}</td>
+                  <td>
+                    <span class="status-badge" [class.badge-active]="item.active" [class.badge-inactive]="!item.active">
+                      {{ item.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="text-right actions-cell">
+                    <button class="action-btn edit-btn" (click)="startEdit(item)" title="Edit">
+                      ✏️ Edit
+                    </button>
+                    <button class="action-btn delete-btn" (click)="deleteItem(item.id)" title="Delete">
+                      🗑️ Delete
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

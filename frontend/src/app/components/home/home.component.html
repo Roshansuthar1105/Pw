@@ -1,0 +1,83 @@
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="badge">Angular 21 + Spring Boot 3.3</div>
+    <h1 class="hero-title">Clean Fullstack Architecture</h1>
+    <p class="hero-subtitle">
+      A modular Angular frontend paired with Spring Boot REST API. Built with strict separation of concerns:
+      dedicated TypeScript, HTML, SCSS, and unit test spec files.
+    </p>
+
+    <div class="actions">
+      <a routerLink="/items" class="btn btn-primary" id="btn-explore-items">
+        Manage Items Demo &rarr;
+      </a>
+      <button class="btn btn-outline" (click)="checkHealth()" id="btn-check-health">
+        Refresh Backend Health
+      </button>
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div class="card-header">
+      <h2 class="card-title">Backend Connectivity</h2>
+      <span class="indicator" [class.online]="health()?.status === 'UP'" [class.offline]="healthError() || (!isLoadingHealth() && !health())"></span>
+    </div>
+
+    @if (isLoadingHealth()) {
+      <div class="loading-state">
+        <span class="spinner"></span>
+        <p>Connecting to <code>/api/health</code>...</p>
+      </div>
+    } @else if (health()) {
+      <div class="health-details">
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span class="value success-text">{{ health()?.status }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Service:</span>
+          <span class="value">{{ health()?.service }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Active Profile:</span>
+          <span class="value code-pill">{{ health()?.profile }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Timestamp:</span>
+          <span class="value timestamp">{{ health()?.timestamp }}</span>
+        </div>
+      </div>
+    } @else if (healthError()) {
+      <div class="error-box">
+        <p class="error-msg">{{ healthError() }}</p>
+        <p class="error-hint">Ensure Spring Boot is running on port 8080 (<code>./gradlew bootRun</code>).</p>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="features-grid">
+  <div class="feature-card">
+    <div class="feature-icon">🧩</div>
+    <h3 class="feature-title">Separation of Concerns</h3>
+    <p class="feature-desc">
+      Strictly zero inline HTML or CSS inside TypeScript files. All templates, styles, logic, and tests reside in their own files.
+    </p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">⚡</div>
+    <h3 class="feature-title">Angular Signals</h3>
+    <p class="feature-desc">
+      Modern reactive state management using signal primitives for fast, fine-grained DOM updates without boilerplate.
+    </p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🛡️</div>
+    <h3 class="feature-title">Standardized Schematics</h3>
+    <p class="feature-desc">
+      Preconfigured <code>angular.json</code> ensures every newly generated component creates complete <code>.ts</code>, <code>.html</code>, <code>.scss</code>, and <code>.spec.ts</code> files.
+    </p>
+  </div>
+</section>

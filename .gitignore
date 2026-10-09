@@ -1,0 +1,41 @@
+# ─── Java / Spring Boot ──────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+target/
+build/
+out/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+*.swo
+*.DS_Store
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+*.secret
+
+# ─── Angular ─────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.cache/
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini

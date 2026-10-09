@@ -1,0 +1,11 @@
+# Netlify configuration when deploying directly from frontend directory
+
+[build]
+  command = "npm run build"
+  publish = "dist/frontend/browser"
+
+# SPA Fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
