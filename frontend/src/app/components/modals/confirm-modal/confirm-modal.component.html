@@ -1,0 +1,33 @@
+<dialog
+  #dialog
+  class="confirm-modal-dialog"
+  aria-labelledby="confirm-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="confirm-content" (click)="$event.stopPropagation()">
+    <h3 id="confirm-modal-title" class="confirm-title">{{ title() }}</h3>
+    <p class="confirm-message">{{ message() }}</p>
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="cancel()"
+        [disabled]="isLoading()"
+        id="btn-confirm-modal-cancel"
+      >
+        {{ cancelText() }}
+      </button>
+      <button
+        type="button"
+        [class]="isDanger() ? 'btn btn--danger' : 'btn'"
+        (click)="confirm()"
+        [disabled]="isLoading()"
+        id="btn-confirm-modal-submit"
+      >
+        {{ isLoading() ? '...' : confirmText() }}
+      </button>
+    </div>
+  </div>
+</dialog>

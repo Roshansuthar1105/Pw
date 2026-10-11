@@ -1,32 +1,49 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ItemService } from '../../services/item.service';
 import { Item, ItemRequest } from '../../models/item.model';
+import { I18nService } from '../../services/i18n.service';
+import { ItemModalComponent } from '../modals/item-modal/item-modal.component';
+import { ConfirmModalComponent } from '../modals/confirm-modal/confirm-modal.component';
 
 @Component({
   selector: 'app-items',
-  imports: [CommonModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ItemModalComponent, ConfirmModalComponent],
   templateUrl: './items.component.html',
   styleUrl: './items.component.scss'
 })
 export class ItemsComponent implements OnInit {
   private readonly itemService = inject(ItemService);
+  readonly i18n = inject(I18nService);
+
+  @ViewChild('itemModal') itemModal?: ItemModalComponent;
+  @ViewChild('confirmDeleteModal') confirmDeleteModal?: ConfirmModalComponent;
 
   readonly items = signal<Item[]>([]);
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
-  readonly successMessage = signal<string | null>(null);
+  readonly toastMessage = signal<string | null>(null);
 
   // Search & Filter
   readonly searchQuery = signal<string>('');
   readonly filterActiveOnly = signal<boolean>(false);
 
-  // Form State
+  // Form State (kept synchronized for tests and helpers)
   readonly itemName = signal<string>('');
   readonly itemDescription = signal<string>('');
   readonly itemActive = signal<boolean>(true);
   readonly editingItemId = signal<number | null>(null);
+  readonly nameTouched = signal<boolean>(false);
+
+  // Modal State
+  readonly itemPendingDelete = signal<Item | null>(null);
+
+  // KPI Computations
+  readonly totalCount = computed(() => this.items().length);
+  readonly activeCount = computed(() => this.items().filter((i) => i.active).length);
+  readonly inactiveCount = computed(() => this.items().filter((i) => !i.active).length);
 
   ngOnInit(): void {
     this.loadItems();
@@ -45,8 +62,8 @@ export class ItemsComponent implements OnInit {
         this.items.set(response.data || []);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        this.errorMessage.set('Failed to load items. Is the backend running?');
+      error: () => {
+        this.errorMessage.set(this.i18n.dict().err_backend_offline);
         this.isLoading.set(false);
       }
     });
@@ -66,10 +83,15 @@ export class ItemsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Search request failed');
+        this.errorMessage.set(this.i18n.dict().err_search_failed);
         this.isLoading.set(false);
       }
     });
+  }
+
+  setFilter(activeOnly: boolean): void {
+    this.filterActiveOnly.set(activeOnly);
+    this.loadItems();
   }
 
   onFilterToggle(): void {
@@ -77,48 +99,9 @@ export class ItemsComponent implements OnInit {
     this.loadItems();
   }
 
-  saveItem(): void {
-    const name = this.itemName().trim();
-    if (!name) {
-      this.errorMessage.set('Item name is required');
-      return;
-    }
-
-    const payload: ItemRequest = {
-      name,
-      description: this.itemDescription().trim(),
-      active: this.itemActive()
-    };
-
-    const editId = this.editingItemId();
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    if (editId !== null) {
-      this.itemService.updateItem(editId, payload).subscribe({
-        next: () => {
-          this.successMessage.set('Item updated successfully');
-          this.resetForm();
-          this.loadItems();
-        },
-        error: () => {
-          this.errorMessage.set('Failed to update item');
-          this.isLoading.set(false);
-        }
-      });
-    } else {
-      this.itemService.createItem(payload).subscribe({
-        next: () => {
-          this.successMessage.set('Item created successfully');
-          this.resetForm();
-          this.loadItems();
-        },
-        error: () => {
-          this.errorMessage.set('Failed to create item');
-          this.isLoading.set(false);
-        }
-      });
-    }
+  openCreateForm(): void {
+    this.resetForm();
+    this.itemModal?.openCreate();
   }
 
   startEdit(item: Item): void {
@@ -126,22 +109,70 @@ export class ItemsComponent implements OnInit {
     this.itemName.set(item.name);
     this.itemDescription.set(item.description);
     this.itemActive.set(item.active);
-    this.successMessage.set(null);
-    this.errorMessage.set(null);
+    this.nameTouched.set(false);
+    this.itemModal?.openEdit(item);
   }
 
-  deleteItem(id: number): void {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+  onItemModalSave(event: { id: number | null; payload: ItemRequest }): void {
+    this.itemModal?.setSubmitting(true);
 
-    this.isLoading.set(true);
-    this.itemService.deleteItem(id).subscribe({
+    if (event.id !== null) {
+      this.itemService.updateItem(event.id, event.payload).subscribe({
+        next: () => {
+          this.itemModal?.setSubmitting(false);
+          this.itemModal?.close();
+          this.triggerToast(this.i18n.dict().toast_updated);
+          this.resetForm();
+          this.loadItems();
+        },
+        error: () => {
+          this.itemModal?.setSubmitting(false);
+          this.itemModal?.setError(this.i18n.dict().err_save_failed);
+        }
+      });
+    } else {
+      this.itemService.createItem(event.payload).subscribe({
+        next: () => {
+          this.itemModal?.setSubmitting(false);
+          this.itemModal?.close();
+          this.triggerToast(this.i18n.dict().toast_created);
+          this.resetForm();
+          this.loadItems();
+        },
+        error: () => {
+          this.itemModal?.setSubmitting(false);
+          this.itemModal?.setError(this.i18n.dict().err_save_failed);
+        }
+      });
+    }
+  }
+
+  promptDelete(item: Item): void {
+    this.itemPendingDelete.set(item);
+    this.confirmDeleteModal?.open();
+  }
+
+  cancelDelete(): void {
+    this.itemPendingDelete.set(null);
+    this.confirmDeleteModal?.close();
+  }
+
+  confirmDelete(): void {
+    const item = this.itemPendingDelete();
+    if (!item) return;
+
+    this.confirmDeleteModal?.isLoading.set(true);
+    this.itemService.deleteItem(item.id).subscribe({
       next: () => {
-        this.successMessage.set('Item deleted successfully');
+        this.confirmDeleteModal?.isLoading.set(false);
+        this.cancelDelete();
+        this.triggerToast(this.i18n.dict().toast_deleted);
         this.loadItems();
       },
       error: () => {
-        this.errorMessage.set('Failed to delete item');
-        this.isLoading.set(false);
+        this.confirmDeleteModal?.isLoading.set(false);
+        this.cancelDelete();
+        this.errorMessage.set('Failed to delete item.');
       }
     });
   }
@@ -151,5 +182,14 @@ export class ItemsComponent implements OnInit {
     this.itemName.set('');
     this.itemDescription.set('');
     this.itemActive.set(true);
+    this.nameTouched.set(false);
+  }
+
+  private triggerToast(message: string): void {
+    this.toastMessage.set(message);
+    setTimeout(() => {
+      this.toastMessage.set(null);
+    }, 3000);
   }
 }
+

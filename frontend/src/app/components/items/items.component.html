@@ -1,169 +1,244 @@
-<div class="items-page">
-  <div class="header-bar">
-    <div>
-      <h1 class="page-title">Items Management</h1>
-      <p class="page-subtitle">Demonstrates full CRUD operations against the Spring Boot <code>/api/items</code> REST API</p>
-    </div>
-  </div>
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumbs">
+  <span aria-current="page">{{ i18n.dict().breadcrumb_items }}</span>
+</nav>
 
-  <!-- Notification banners -->
-  @if (errorMessage()) {
-    <div class="alert alert-error">
+<!-- Page Header (DESIGN.md §3.5: h1 + one-line subtitle + at most one primary button) -->
+<header class="page-header">
+  <div>
+    <h1>{{ i18n.dict().items_title }}</h1>
+    <p>{{ i18n.dict().items_subtitle }}</p>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" (click)="openCreateForm()" id="btn-header-create">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="12" x2="12" y1="5" y2="19"/>
+        <line x1="5" x2="19" y1="12" y2="12"/>
+      </svg>
+      {{ i18n.dict().items_action_create }}
+    </button>
+  </div>
+</header>
+
+<!-- Global Error Alert -->
+@if (errorMessage()) {
+  <div class="alert alert--error" role="alert" style="margin-bottom: 16px;">
+    <svg class="i" viewBox="0 0 24 24" style="color: var(--bad);" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" x2="12" y1="8" y2="12"/>
+      <line x1="12" x2="12.01" y1="16" y2="16"/>
+    </svg>
+    <div style="flex: 1;">
       <span>{{ errorMessage() }}</span>
-      <button class="alert-close" (click)="errorMessage.set(null)">&times;</button>
     </div>
-  }
-
-  @if (successMessage()) {
-    <div class="alert alert-success">
-      <span>{{ successMessage() }}</span>
-      <button class="alert-close" (click)="successMessage.set(null)">&times;</button>
-    </div>
-  }
-
-  <div class="content-grid">
-    <!-- Form Card -->
-    <div class="card form-card">
-      <h2 class="card-title">
-        {{ editingItemId() !== null ? 'Edit Item #' + editingItemId() : 'Create New Item' }}
-      </h2>
-
-      <form (ngSubmit)="saveItem()" class="item-form">
-        <div class="form-group">
-          <label for="item-name">Item Name *</label>
-          <input
-            id="item-name"
-            type="text"
-            [ngModel]="itemName()"
-            (ngModelChange)="itemName.set($event)"
-            name="name"
-            placeholder="e.g. Modern Keyboard"
-            required
-            class="input-field"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="item-desc">Description</label>
-          <textarea
-            id="item-desc"
-            [ngModel]="itemDescription()"
-            (ngModelChange)="itemDescription.set($event)"
-            name="description"
-            rows="3"
-            placeholder="Item details and specifications"
-            class="input-field textarea-field"
-          ></textarea>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [ngModel]="itemActive()"
-              (ngModelChange)="itemActive.set($event)"
-              name="active"
-              id="item-active"
-            />
-            <span>Active Status</span>
-          </label>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="isLoading()" id="btn-save-item">
-            {{ editingItemId() !== null ? 'Update Item' : 'Add Item' }}
-          </button>
-          @if (editingItemId() !== null) {
-            <button type="button" class="btn btn-secondary" (click)="resetForm()" id="btn-cancel-edit">
-              Cancel
-            </button>
-          }
-        </div>
-      </form>
-    </div>
-
-    <!-- Table Card -->
-    <div class="card list-card">
-      <div class="filter-bar">
-        <div class="search-box">
-          <input
-            type="text"
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-            (keyup.enter)="onSearch()"
-            placeholder="Search items by name..."
-            class="input-field search-input"
-            id="input-search"
-          />
-          <button class="btn btn-sm btn-outline" (click)="onSearch()" id="btn-search">
-            Search
-          </button>
-        </div>
-
-        <div class="filter-actions">
-          <button
-            class="btn btn-sm"
-            [class.btn-active]="filterActiveOnly()"
-            [class.btn-outline]="!filterActiveOnly()"
-            (click)="onFilterToggle()"
-            id="btn-filter-active"
-          >
-            {{ filterActiveOnly() ? 'Showing: Active Only' : 'Filter: Active Only' }}
-          </button>
-          <button class="btn btn-sm btn-outline" (click)="loadItems()" id="btn-refresh-list">
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      @if (isLoading()) {
-        <div class="loading-container">
-          <span class="spinner"></span>
-          <p>Loading items from backend...</p>
-        </div>
-      } @else if (items().length === 0) {
-        <div class="empty-container">
-          <div class="empty-icon">📦</div>
-          <p class="empty-text">No items found</p>
-          <span class="empty-subtext">Add a new item using the form or refresh the list</span>
-        </div>
-      } @else {
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th class="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of items(); track item.id) {
-                <tr>
-                  <td class="font-mono">#{{ item.id }}</td>
-                  <td class="item-name-cell">{{ item.name }}</td>
-                  <td class="item-desc-cell">{{ item.description || '-' }}</td>
-                  <td>
-                    <span class="status-badge" [class.badge-active]="item.active" [class.badge-inactive]="!item.active">
-                      {{ item.active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td class="text-right actions-cell">
-                    <button class="action-btn edit-btn" (click)="startEdit(item)" title="Edit">
-                      ✏️ Edit
-                    </button>
-                    <button class="action-btn delete-btn" (click)="deleteItem(item.id)" title="Delete">
-                      🗑️ Delete
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
+    <button type="button" class="btn btn--outline" (click)="loadItems()" style="padding: 4px 10px; font-size: 12px;">
+      {{ i18n.dict().refresh_btn }}
+    </button>
   </div>
+}
+
+<!-- KPI Metric Cards (DESIGN.md §4.3) -->
+<section class="grid grid--kpi" aria-label="Items overview metrics" style="margin-bottom: 24px;">
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_total_items }}</span>
+      <span class="badge badge--ok">{{ i18n.dict().badge_actual }}</span>
+    </div>
+    <div class="value">{{ totalCount() }}</div>
+    <span class="delta" style="color: var(--mu);">Persisted rows</span>
+  </div>
+
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_active_items }}</span>
+      <span class="badge badge--ok">{{ i18n.dict().badge_actual }}</span>
+    </div>
+    <div class="value" style="color: var(--ok);">{{ activeCount() }}</div>
+    <span class="delta delta--up">{{ totalCount() > 0 ? (activeCount() / totalCount() * 100 | number:'1.0-0') + '% active' : '0%' }}</span>
+  </div>
+
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_inactive_items }}</span>
+      <span class="badge badge--neutral">{{ i18n.dict().badge_actual }}</span>
+    </div>
+    <div class="value" style="color: var(--mu);">{{ inactiveCount() }}</div>
+    <span class="delta delta--down">{{ inactiveCount() }} inactive</span>
+  </div>
+</section>
+
+<!-- Filter Row (DESIGN.md §4.4) -->
+<div class="filters">
+  <!-- Search input -->
+  <div class="search" style="max-width: 320px;">
+    <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.3-4.3"/>
+    </svg>
+    <input
+      type="search"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      (keyup.enter)="onSearch()"
+      [placeholder]="i18n.dict().search_items_placeholder"
+      aria-label="Filter items by name"
+      id="input-search-items"
+    />
+  </div>
+
+  <!-- Search Button -->
+  <button type="button" class="btn btn--outline" (click)="onSearch()" id="btn-submit-search">
+    {{ i18n.dict().search_btn }}
+  </button>
+
+  <!-- Filter Chips (DESIGN.md §4.4: chip[aria-pressed]) -->
+  <button
+    type="button"
+    class="chip"
+    [attr.aria-pressed]="!filterActiveOnly()"
+    (click)="setFilter(false)"
+    id="chip-filter-all"
+  >
+    {{ i18n.dict().filter_all }}
+  </button>
+
+  <button
+    type="button"
+    class="chip"
+    [attr.aria-pressed]="filterActiveOnly()"
+    (click)="setFilter(true)"
+    id="chip-filter-active"
+  >
+    {{ i18n.dict().filter_active_only }}
+  </button>
+
+  <button
+    type="button"
+    class="btn btn--outline"
+    (click)="loadItems()"
+    [disabled]="isLoading()"
+    id="btn-refresh-items"
+    style="margin-left: auto;"
+  >
+    <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+      <path d="M3 3v5h5"/>
+      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+      <path d="M16 21h5v-5"/>
+    </svg>
+    {{ i18n.dict().refresh_btn }}
+  </button>
+</div>
+
+<!-- Table Card (DESIGN.md §4.5) -->
+<div class="card" style="margin-bottom: 24px;">
+  @if (isLoading()) {
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 12px 0;">
+      <div class="skeleton" style="height: 36px;"></div>
+      <div class="skeleton" style="height: 48px;"></div>
+      <div class="skeleton" style="height: 48px;"></div>
+      <div class="skeleton" style="height: 48px;"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <!-- Empty State (DESIGN.md §4.9) -->
+    <div class="empty">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m7.5 4.27 9 5.15"/>
+        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        <path d="m3.3 7 8.7 5 8.7-5"/>
+        <path d="M12 22V12"/>
+      </svg>
+      <h3>{{ i18n.dict().empty_items_title }}</h3>
+      <p>{{ i18n.dict().empty_items_desc }}</p>
+      <button type="button" class="btn" (click)="openCreateForm()" style="margin-top: 12px;">
+        {{ i18n.dict().items_action_create }}
+      </button>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="num">{{ i18n.dict().th_id }}</th>
+            <th>{{ i18n.dict().th_name }}</th>
+            <th>{{ i18n.dict().th_desc }}</th>
+            <th>{{ i18n.dict().th_status }}</th>
+            <th>{{ i18n.dict().th_kind }}</th>
+            <th class="num">{{ i18n.dict().th_actions }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td class="num">#{{ item.id }}</td>
+              <td><strong>{{ item.name }}</strong></td>
+              <td style="color: var(--mu); max-width: 280px;">{{ item.description || '—' }}</td>
+              <td>
+                @if (item.active) {
+                  <span class="badge badge--ok">{{ i18n.dict().status_active }}</span>
+                } @else {
+                  <span class="badge badge--neutral">{{ i18n.dict().status_inactive }}</span>
+                }
+              </td>
+              <td>
+                <span class="badge badge--ok">{{ i18n.dict().badge_actual }}</span>
+              </td>
+              <td class="num">
+                <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
+                  <button
+                    type="button"
+                    class="btn btn--outline"
+                    (click)="startEdit(item)"
+                    style="padding: 4px 8px; font-size: 12px;"
+                    [attr.aria-label]="i18n.dict().action_edit + ' ' + item.name"
+                  >
+                    <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                      <path d="m15 5 4 4"/>
+                    </svg>
+                    {{ i18n.dict().action_edit }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--outline btn--danger"
+                    (click)="promptDelete(item)"
+                    style="padding: 4px 8px; font-size: 12px;"
+                    [attr.aria-label]="i18n.dict().action_delete + ' ' + item.name"
+                  >
+                    <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 6h18"/>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                      <line x1="10" x2="10" y1="11" y2="17"/>
+                      <line x1="14" x2="14" y1="11" y2="17"/>
+                    </svg>
+                    {{ i18n.dict().action_delete }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Modals (DESIGN.md §4.8) -->
+<app-item-modal #itemModal (save)="onItemModalSave($event)" />
+
+<app-confirm-modal
+  #confirmDeleteModal
+  [title]="i18n.dict().dlg_delete_title"
+  [message]="i18n.dict().dlg_delete_desc"
+  [confirmText]="i18n.dict().dlg_confirm_delete"
+  [cancelText]="i18n.dict().dlg_cancel"
+  [isDanger]="true"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<!-- Confirmation Toast (DESIGN.md §4.8) -->
+<div class="toast" [class.is-visible]="toastMessage() !== null" role="status" aria-live="polite">
+  {{ toastMessage() }}
 </div>

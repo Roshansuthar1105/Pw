@@ -1,5 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { ThemeService } from './services/theme.service';
+import { I18nService } from './services/i18n.service';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +10,27 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './app.component.scss'
 })
 export class App {
-  readonly appTitle = signal('Angular + Spring Boot');
-  readonly currentYear = signal(new Date().getFullYear());
+  readonly theme = inject(ThemeService);
+  readonly i18n = inject(I18nService);
+
+  readonly isCollapsed = signal<boolean>(false);
+  readonly isDrawerOpen = signal<boolean>(false);
+
+  toggleSidebar(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) {
+      this.isDrawerOpen.update((open) => !open);
+    } else {
+      this.isCollapsed.update((collapsed) => !collapsed);
+    }
+  }
+
+  closeDrawer(): void {
+    this.isDrawerOpen.set(false);
+  }
+
+  closeDrawerOnNav(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) {
+      this.isDrawerOpen.set(false);
+    }
+  }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ItemService } from '../../services/item.service';
 import { HealthStatus } from '../../models/api-response.model';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-home',
@@ -11,6 +12,7 @@ import { HealthStatus } from '../../models/api-response.model';
 })
 export class HomeComponent implements OnInit {
   private readonly itemService = inject(ItemService);
+  readonly i18n = inject(I18nService);
 
   readonly health = signal<HealthStatus | null>(null);
   readonly isLoadingHealth = signal<boolean>(false);
@@ -29,8 +31,8 @@ export class HomeComponent implements OnInit {
         this.health.set(status);
         this.isLoadingHealth.set(false);
       },
-      error: (err) => {
-        this.healthError.set('Backend not reachable or running on another port');
+      error: () => {
+        this.healthError.set(this.i18n.dict().err_backend_offline);
         this.isLoadingHealth.set(false);
       }
     });

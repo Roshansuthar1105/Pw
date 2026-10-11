@@ -1,0 +1,114 @@
+<dialog
+  #modalDialog
+  class="item-modal-dialog"
+  aria-labelledby="item-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="item-modal-title" class="modal-title">
+          {{ editingItemId() !== null ? (i18n.dict().form_edit_title + ' #' + editingItemId()) : i18n.dict().form_create_title }}
+        </h2>
+        <p class="modal-subtitle">
+          {{ editingItemId() !== null ? i18n.dict().items_subtitle : i18n.dict().placeholder_item_desc }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        [attr.aria-label]="i18n.dict().btn_cancel"
+        id="btn-close-item-modal"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Error Alert inside modal -->
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert" style="margin-top: 4px;">
+        <svg class="i" viewBox="0 0 24 24" style="color: var(--bad);" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" x2="12" y1="8" y2="12"/>
+          <line x1="12" x2="12.01" y1="16" y2="16"/>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Modal Form -->
+    <form (ngSubmit)="submit()" class="modal-form">
+      <div class="field">
+        <label for="item-modal-input-name">{{ i18n.dict().label_item_name }}</label>
+        <input
+          #nameInput
+          id="item-modal-input-name"
+          type="text"
+          [ngModel]="itemName()"
+          (ngModelChange)="itemName.set($event)"
+          name="name"
+          [placeholder]="i18n.dict().placeholder_item_name"
+          required
+          class="input"
+          [attr.aria-invalid]="nameTouched() && !itemName().trim()"
+        />
+        @if (nameTouched() && !itemName().trim()) {
+          <div class="error" role="alert">{{ i18n.dict().err_name_required }}</div>
+        }
+      </div>
+
+      <div class="field">
+        <label for="item-modal-input-desc">{{ i18n.dict().label_item_desc }}</label>
+        <textarea
+          id="item-modal-input-desc"
+          [ngModel]="itemDescription()"
+          (ngModelChange)="itemDescription.set($event)"
+          name="description"
+          rows="3"
+          [placeholder]="i18n.dict().placeholder_item_desc"
+          class="input"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label class="modal-checkbox-row">
+          <input
+            type="checkbox"
+            [ngModel]="itemActive()"
+            (ngModelChange)="itemActive.set($event)"
+            name="active"
+            id="item-modal-check-active"
+          />
+          <span>{{ i18n.dict().label_item_active }}</span>
+        </label>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="close()"
+          [disabled]="isSubmitting()"
+          id="btn-modal-cancel"
+        >
+          {{ i18n.dict().btn_cancel }}
+        </button>
+        <button
+          type="submit"
+          class="btn"
+          [disabled]="isSubmitting()"
+          id="btn-modal-submit"
+        >
+          {{ isSubmitting() ? '...' : (editingItemId() !== null ? i18n.dict().btn_update : i18n.dict().btn_save) }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

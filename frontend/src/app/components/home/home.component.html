@@ -1,83 +1,186 @@
-<section class="hero-section">
-  <div class="hero-content">
-    <div class="badge">Angular 21 + Spring Boot 3.3</div>
-    <h1 class="hero-title">Clean Fullstack Architecture</h1>
-    <p class="hero-subtitle">
-      A modular Angular frontend paired with Spring Boot REST API. Built with strict separation of concerns:
-      dedicated TypeScript, HTML, SCSS, and unit test spec files.
-    </p>
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumbs">
+  <span aria-current="page">{{ i18n.dict().breadcrumb_dashboard }}</span>
+</nav>
 
-    <div class="actions">
-      <a routerLink="/items" class="btn btn-primary" id="btn-explore-items">
-        Manage Items Demo &rarr;
-      </a>
-      <button class="btn btn-outline" (click)="checkHealth()" id="btn-check-health">
-        Refresh Backend Health
-      </button>
+<!-- Page Header -->
+<header class="page-header">
+  <div>
+    <h1>{{ i18n.dict().dash_title }}</h1>
+    <p>{{ i18n.dict().dash_subtitle }}</p>
+  </div>
+  <div class="actions">
+    <a routerLink="/items" class="btn" id="btn-dash-items">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        <path d="m3.3 7 8.7 5 8.7-5"/>
+        <path d="M12 22V12"/>
+      </svg>
+      {{ i18n.dict().dash_action_items }}
+    </a>
+  </div>
+</header>
+
+<!-- KPI Cards Grid (DESIGN.md §4.3) -->
+<section class="grid grid--kpi" aria-label="System KPIs" style="margin-bottom: 24px;">
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_backend_status }}</span>
+      <span class="badge badge--ok">{{ i18n.dict().badge_actual }}</span>
     </div>
+    <div class="value">
+      @if (isLoadingHealth()) {
+        <div class="skeleton" style="height: 32px; width: 120px; margin-top: 4px;"></div>
+      } @else if (health()?.status === 'UP') {
+        <span style="color: var(--ok);">UP</span>
+      } @else {
+        <span style="color: var(--bad);">DOWN</span>
+      }
+    </div>
+    <span class="delta" [class.delta--up]="health()?.status === 'UP'" [class.delta--down]="health()?.status !== 'UP'">
+      {{ health()?.status === 'UP' ? i18n.dict().kpi_status_healthy : i18n.dict().kpi_status_offline }}
+    </span>
   </div>
 
-  <div class="status-card">
-    <div class="card-header">
-      <h2 class="card-title">Backend Connectivity</h2>
-      <span class="indicator" [class.online]="health()?.status === 'UP'" [class.offline]="healthError() || (!isLoadingHealth() && !health())"></span>
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_environment }}</span>
+      <span class="badge badge--ok">{{ i18n.dict().badge_verified }}</span>
+    </div>
+    <div class="value">
+      @if (isLoadingHealth()) {
+        <div class="skeleton" style="height: 32px; width: 80px; margin-top: 4px;"></div>
+      } @else {
+        <span>{{ health()?.profile || 'local' }}</span>
+      }
+    </div>
+    <span class="delta" style="color: var(--mu);">Port 8080</span>
+  </div>
+
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_database }}</span>
+      <span class="badge badge--ok">{{ i18n.dict().badge_actual }}</span>
+    </div>
+    <div class="value">Flyway</div>
+    <span class="delta delta--up">V1__create_items</span>
+  </div>
+
+  <div class="card kpi">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="label">{{ i18n.dict().kpi_architecture }}</span>
+      <span class="badge badge--neutral">{{ i18n.dict().badge_sample }}</span>
+    </div>
+    <div class="value">Signals</div>
+    <span class="delta delta--up">Angular 21 + Tailwind v4</span>
+  </div>
+</section>
+
+<!-- 2-Column Content Grid (DESIGN.md §5) -->
+<div class="grid grid--2">
+  <!-- Card 1: Backend Health Probe -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3>{{ i18n.dict().card_connectivity }}</h3>
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="checkHealth()"
+        [disabled]="isLoadingHealth()"
+        id="btn-refresh-health"
+        style="padding: 6px 12px; font-size: 13px;"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" [style.animation]="isLoadingHealth() ? 'spin 1s linear infinite' : 'none'">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+          <path d="M16 21h5v-5"/>
+        </svg>
+        {{ i18n.dict().dash_action_refresh }}
+      </button>
     </div>
 
+    <p style="color: var(--mu); font-size: 13px; margin: 0 0 16px;">
+      {{ i18n.dict().card_connectivity_desc }}
+    </p>
+
     @if (isLoadingHealth()) {
-      <div class="loading-state">
-        <span class="spinner"></span>
-        <p>Connecting to <code>/api/health</code>...</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="skeleton" style="height: 20px; width: 60%;"></div>
+        <div class="skeleton" style="height: 20px; width: 85%;"></div>
+        <div class="skeleton" style="height: 20px; width: 70%;"></div>
       </div>
     } @else if (health()) {
-      <div class="health-details">
-        <div class="info-row">
-          <span class="label">Status:</span>
-          <span class="value success-text">{{ health()?.status }}</span>
+      <div style="display: grid; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--bd); padding-bottom: 8px;">
+          <span style="color: var(--mu); font-size: 13px;">{{ i18n.dict().field_status }}</span>
+          <span class="badge badge--ok">{{ health()?.status }}</span>
         </div>
-        <div class="info-row">
-          <span class="label">Service:</span>
-          <span class="value">{{ health()?.service }}</span>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--bd); padding-bottom: 8px;">
+          <span style="color: var(--mu); font-size: 13px;">{{ i18n.dict().field_service_name }}</span>
+          <strong>{{ health()?.service }}</strong>
         </div>
-        <div class="info-row">
-          <span class="label">Active Profile:</span>
-          <span class="value code-pill">{{ health()?.profile }}</span>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--bd); padding-bottom: 8px;">
+          <span style="color: var(--mu); font-size: 13px;">{{ i18n.dict().field_profile }}</span>
+          <span class="badge badge--neutral">{{ health()?.profile }}</span>
         </div>
-        <div class="info-row">
-          <span class="label">Timestamp:</span>
-          <span class="value timestamp">{{ health()?.timestamp }}</span>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--mu); font-size: 13px;">{{ i18n.dict().field_timestamp }}</span>
+          <span style="font-variant-numeric: tabular-nums; font-size: 13px;">{{ health()?.timestamp }}</span>
         </div>
       </div>
     } @else if (healthError()) {
-      <div class="error-box">
-        <p class="error-msg">{{ healthError() }}</p>
-        <p class="error-hint">Ensure Spring Boot is running on port 8080 (<code>./gradlew bootRun</code>).</p>
+      <div class="alert alert--error" role="alert">
+        <svg class="i" viewBox="0 0 24 24" style="color: var(--bad);" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" x2="12" y1="8" y2="12"/>
+          <line x1="12" x2="12.01" y1="16" y2="16"/>
+        </svg>
+        <div style="flex: 1;">
+          <strong>Connection Error</strong>
+          <p style="margin: 4px 0 0; font-size: 13px;">{{ healthError() }}</p>
+        </div>
+        <button type="button" class="btn btn--outline" (click)="checkHealth()" style="padding: 4px 10px; font-size: 12px;">
+          Retry
+        </button>
       </div>
     }
   </div>
-</section>
 
-<section class="features-grid">
-  <div class="feature-card">
-    <div class="feature-icon">🧩</div>
-    <h3 class="feature-title">Separation of Concerns</h3>
-    <p class="feature-desc">
-      Strictly zero inline HTML or CSS inside TypeScript files. All templates, styles, logic, and tests reside in their own files.
-    </p>
-  </div>
+  <!-- Card 2: Architecture Highlights -->
+  <div class="card">
+    <h3>{{ i18n.dict().card_architecture }}</h3>
 
-  <div class="feature-card">
-    <div class="feature-icon">⚡</div>
-    <h3 class="feature-title">Angular Signals</h3>
-    <p class="feature-desc">
-      Modern reactive state management using signal primitives for fast, fine-grained DOM updates without boilerplate.
-    </p>
-  </div>
+    <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <svg class="i" style="color: var(--pri); margin-top: 2px;" viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <strong>{{ i18n.dict().arch_item1_title }}</strong>
+          <p style="color: var(--mu); font-size: 13px; margin: 2px 0 0;">{{ i18n.dict().arch_item1_desc }}</p>
+        </div>
+      </div>
 
-  <div class="feature-card">
-    <div class="feature-icon">🛡️</div>
-    <h3 class="feature-title">Standardized Schematics</h3>
-    <p class="feature-desc">
-      Preconfigured <code>angular.json</code> ensures every newly generated component creates complete <code>.ts</code>, <code>.html</code>, <code>.scss</code>, and <code>.spec.ts</code> files.
-    </p>
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <svg class="i" style="color: var(--pri); margin-top: 2px;" viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <strong>{{ i18n.dict().arch_item2_title }}</strong>
+          <p style="color: var(--mu); font-size: 13px; margin: 2px 0 0;">{{ i18n.dict().arch_item2_desc }}</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <svg class="i" style="color: var(--pri); margin-top: 2px;" viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <strong>{{ i18n.dict().arch_item3_title }}</strong>
+          <p style="color: var(--mu); font-size: 13px; margin: 2px 0 0;">{{ i18n.dict().arch_item3_desc }}</p>
+        </div>
+      </div>
+    </div>
   </div>
-</section>
+</div>

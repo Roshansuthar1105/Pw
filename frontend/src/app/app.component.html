@@ -1,38 +1,159 @@
-<div class="app-layout">
-  <!-- Navigation Header -->
-  <header class="app-header">
-    <div class="container header-container">
-      <div class="brand">
-        <span class="brand-icon">⚡</span>
-        <span class="brand-name">{{ appTitle() }}</span>
+<div class="app" [class.collapsed]="isCollapsed()" [class.drawer-open]="isDrawerOpen()">
+  <!-- Accessible Skip Link -->
+  <a href="#main-content" class="skip-link">{{ i18n.dict().skip_link }}</a>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
+    <!-- Brand -->
+    <div class="brand">
+      <svg class="i" style="width: 28px; height: 28px;" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span class="brand-name">{{ i18n.dict().brand_name }}</span>
+    </div>
+
+    <!-- Course / Batch Switcher -->
+    <div class="course-switch">
+      <div>
+        <strong>NEET 2026</strong>
+        <small>{{ i18n.dict().brand_sub }}</small>
+      </div>
+      <span class="badge badge--ok">{{ i18n.dict().status_online }}</span>
+    </div>
+
+    <!-- Navigation Section -->
+    <div class="menu-section">Platform</div>
+
+    <!-- Menu Links -->
+    <a
+      routerLink="/"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="menu-item"
+      id="nav-dashboard"
+      (click)="closeDrawerOnNav()"
+    >
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+        <rect width="7" height="9" x="3" y="3" rx="1"/>
+        <rect width="7" height="5" x="14" y="3" rx="1"/>
+        <rect width="7" height="9" x="14" y="12" rx="1"/>
+        <rect width="7" height="5" x="3" y="16" rx="1"/>
+      </svg>
+      <span class="label">{{ i18n.dict().nav_dashboard }}</span>
+    </a>
+
+    <a
+      routerLink="/items"
+      routerLinkActive="is-active"
+      class="menu-item"
+      id="nav-items"
+      (click)="closeDrawerOnNav()"
+    >
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        <path d="m3.3 7 8.7 5 8.7-5"/>
+        <path d="M12 22V12"/>
+      </svg>
+      <span class="label">{{ i18n.dict().nav_items }}</span>
+      <span class="badge menu-badge">CRUD</span>
+    </a>
+
+    <!-- Pinned User Card -->
+    <div class="user-card">
+      <div class="avatar" aria-hidden="true">M</div>
+      <div>
+        <strong>{{ i18n.dict().role_admin }}</strong>
+        <small>{{ i18n.dict().user_name }}</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Drawer Overlay -->
+  <div class="overlay" (click)="closeDrawer()" aria-hidden="true"></div>
+
+  <!-- Body layout containing Topbar and Routed Main View -->
+  <div class="app-body">
+    <header class="topbar">
+      <!-- Sidebar Toggle -->
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="toggleSidebar()"
+        aria-label="Toggle navigation menu"
+        id="btn-sidebar-toggle"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" x2="20" y1="12" y2="12"/>
+          <line x1="4" x2="20" y1="6" y2="6"/>
+          <line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Global Search -->
+      <div class="search">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input
+          type="search"
+          [placeholder]="i18n.dict().search_placeholder"
+          aria-label="Search"
+          id="global-search-input"
+        />
       </div>
 
-      <nav class="nav-links">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item" id="nav-home">
-          Home
-        </a>
-        <a routerLink="/items" routerLinkActive="active" class="nav-item" id="nav-items">
-          Items Demo
-        </a>
-      </nav>
-    </div>
-  </header>
+      <div class="spacer"></div>
 
-  <!-- Main Content Routed Views -->
-  <main class="app-main">
-    <div class="container">
+      <!-- Bilingual Language Toggle -->
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="i18n.toggleLang()"
+        [attr.aria-label]="'Switch language to ' + i18n.dict().lang_toggle"
+        id="btn-lang-toggle"
+      >
+        {{ i18n.dict().lang_toggle }}
+      </button>
+
+      <!-- Theme Mode Toggle -->
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="theme.toggleTheme()"
+        [attr.aria-label]="i18n.dict().theme_toggle"
+        id="btn-theme-toggle"
+      >
+        @if (theme.mode() === 'dark') {
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        } @else {
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        }
+      </button>
+
+      <!-- Notifications -->
+      <button
+        type="button"
+        class="icon-btn"
+        aria-label="View notifications"
+        id="btn-notifications"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+        <span class="dot" aria-hidden="true">1</span>
+      </button>
+    </header>
+
+    <!-- Main Content Routed Views -->
+    <main class="main" id="main-content">
       <router-outlet></router-outlet>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="app-footer">
-    <div class="container footer-container">
-      <p>&copy; {{ currentYear() }} Fullstack Angular + Spring Boot Template</p>
-      <div class="footer-links">
-        <span class="footer-tag">Angular 21</span>
-        <span class="footer-tag">Spring Boot 3.3</span>
-      </div>
-    </div>
-  </footer>
+    </main>
+  </div>
 </div>

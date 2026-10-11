@@ -23,12 +23,14 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should have the title signal set', () => {
-    expect(app.appTitle()).toContain('Angular + Spring Boot');
+  it('should toggle sidebar collapsed state', () => {
+    const initial = app.isCollapsed();
+    app.isCollapsed.set(!initial);
+    expect(app.isCollapsed()).toBe(!initial);
   });
 
-  it('should render brand name in header', () => {
+  it('should render brand name in sidebar', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.brand-name')?.textContent).toContain('Angular + Spring Boot');
+    expect(compiled.querySelector('.brand-name')?.textContent).toContain('Medhaa');
   });
 });

@@ -19,7 +19,8 @@ Copy this file to the repo root. Also save it as `CLAUDE.md`, `.cursorrules` or 
 - **Every page has:** breadcrumb, page header (h1 + one-line subtitle + at most one primary button), and empty, loading and error states.
 - **Light and dark mode** must both work. Test at 360px, 768px and 1280px widths.
 - **Accessibility:** AA contrast, `:focus-visible` ring, keyboard operable, correct ARIA, touch targets of at least 40px.
-- **Bilingual:** no hard-coded user-facing strings. Add keys to `en` and `hi` translation files. Allow ~30% longer Hindi text.
+- **Bilingual & i18n JSON files:** no hard-coded user-facing strings and no inline translation dictionaries in services. All strings must live in separate `.json` files (`en.json`, `hi.json`) under `src/app/i18n/` (and `public/i18n/`). Allow ~30% longer Hindi text.
+- **Modals for Creation & Actions:** Never render inline create/edit/action forms below tables or main page content. Use dedicated modal components located in `src/app/components/modals/` (e.g., `ItemModalComponent`, `ConfirmModalComponent`) built with native `<dialog>` + `.dialog-actions` to open modals for creation, editing, or destructive confirmations.
 - **No fake UI.** Every button, link and toggle must do something real. If the feature is not built, do not render it.
 - **Permissions:** render menu items and actions only for allowed roles, and enforce the same check on the server.
 - **Label data kinds:** `Actual` (green), `Estimated` (amber, with range and "Not a guarantee"), `AI-generated` (primary), `Verified` (green), `Sample` (neutral).
@@ -37,7 +38,7 @@ Copy this file to the repo root. Also save it as `CLAUDE.md`, `.cursorrules` or 
 | Filter | `.chip[aria-pressed]` inside `.filters` |
 | Table | `.table-wrap > table`, numbers use `td.num` |
 | Form | `.field` + `label` + `.input`, errors in `.field .error` |
-| Dialog | native `<dialog>` + `.dialog-actions` |
+| Dialog / Modal | native `<dialog>` + `.dialog-actions` in `components/modals/` |
 | Feedback | `.toast.is-visible` (confirmations), `.alert--error` (errors) |
 | Empty state | `.empty` with icon, h3, one-line text, optional action |
 | Loading | `.skeleton` |
@@ -45,8 +46,8 @@ Copy this file to the repo root. Also save it as `CLAUDE.md`, `.cursorrules` or 
 
 ## Workflow for a new component or page
 1. State which existing pattern you are following (DESIGN.md section number).
-2. Build it with tokens and the classes above.
-3. Add EN and HI strings.
+2. Build it with tokens and the classes above. For creation/editing or action prompts, place modals in `components/modals/`.
+3. Add keys to `src/app/i18n/en.json` and `src/app/i18n/hi.json`.
 4. Add empty, loading and error states.
 5. Verify in light and dark mode, at 360 / 768 / 1280px, using the keyboard only.
 6. Walk through the Definition of Done checklist in DESIGN.md section 11 and report anything you could not satisfy.
