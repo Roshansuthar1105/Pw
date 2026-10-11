@@ -12,15 +12,15 @@
     <span class="sep">›</span>
     <span>Access Control</span>
     <span class="sep">›</span>
-    <span aria-current="page">Component Manager</span>
+    <span aria-current="page">{{ i18n.dict().comp_mgmt_title || 'Component Manager' }}</span>
   </nav>
 
   <!-- Page Header -->
   <header class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Component Manager</h1>
+      <h1 class="page-title">{{ i18n.dict().comp_mgmt_title || 'Component Manager' }}</h1>
       <p class="page-subtitle">
-        Register and organize menus, pages (submenus), and granular UI functionalities in a 3-tier hierarchy.
+        {{ i18n.dict().comp_mgmt_subtitle || 'Register and organize menus, pages (submenus), and granular UI functionalities in a 3-tier hierarchy.' }}
       </p>
     </div>
     <div class="header-actions">
@@ -42,10 +42,10 @@
         id="btn-register-component"
       >
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <line x1="12" x2="12" y1="5" y2="19"/>
-          <line x1="5" x2="19" y1="12" y2="12"/>
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Register Component
+        {{ i18n.dict().comp_btn_register || 'Register Component' }}
       </button>
     </div>
   </header>
@@ -53,173 +53,546 @@
   <!-- Error Alert -->
   @if (errorMessage()) {
     <div class="alert alert--error" role="alert">
+      <svg class="i" viewBox="0 0 24 24" style="color: var(--bad);" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
       <span>{{ errorMessage() }}</span>
     </div>
   }
 
-  <!-- KPIs -->
-  <section class="kpi-grid" aria-label="Component Metrics">
+  <!-- Metric KPIs -->
+  <section class="grid grid--kpi" aria-label="Component Metrics">
     <div class="card kpi">
-      <span class="label">Total Components</span>
-      <span class="value">{{ totalCount() }}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="label">Total Components</span>
+        <span class="badge badge--ok">PERSISTED</span>
+      </div>
+      <div class="value">{{ totalCount() }}</div>
       <span class="delta">Configured</span>
     </div>
     <div class="card kpi">
-      <span class="label">Sidebar Menus</span>
-      <span class="value">{{ menuCount() }}</span>
-      <span class="delta">Level 1</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="label">Sidebar Menus</span>
+        <span class="badge" style="background: color-mix(in srgb, var(--pri) 15%, transparent); color: var(--pri);">LEVEL 1</span>
+      </div>
+      <div class="value">{{ menuCount() }}</div>
+      <span class="delta delta--up">Top-Level Navigation</span>
     </div>
     <div class="card kpi">
-      <span class="label">Pages / Submenus</span>
-      <span class="value">{{ submenuCount() }}</span>
-      <span class="delta">Level 2</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="label">Pages / Submenus</span>
+        <span class="badge badge--ok">LEVEL 2</span>
+      </div>
+      <div class="value">{{ submenuCount() }}</div>
+      <span class="delta delta--up">Routed Module Pages</span>
     </div>
     <div class="card kpi">
-      <span class="label">UI Functionalities</span>
-      <span class="value">{{ funcCount() }}</span>
-      <span class="delta">Level 3</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="label">Granular Functionalities</span>
+        <span class="badge badge--warn">LEVEL 3</span>
+      </div>
+      <div class="value">{{ funcCount() }}</div>
+      <span class="delta">Buttons &amp; Actions</span>
     </div>
   </section>
 
-  <!-- Main Content: Hierarchy Visualizer -->
-  <section class="hierarchy-section" aria-label="Component Hierarchy">
-    <div class="section-top">
-      <h2>3-Level Component Hierarchy</h2>
-      <p class="section-desc">Strict rules: MENU &gt; SUBMENU &gt; FUNCTIONALITY. No skipping levels.</p>
-    </div>
-
-    @if (isLoading()) {
-      <div class="skeleton-list">
-        <div class="skeleton" style="height: 100px;"></div>
-        <div class="skeleton" style="height: 100px;"></div>
+  <!-- Card 1: Search & Filter Panel (Matching Reference UI) -->
+  <section class="card filter-card" aria-label="Component Filters">
+    <div class="filter-card-header">
+      <div class="filter-header-text">
+        <h2 class="filter-card-title">{{ i18n.dict().comp_filter_title || 'Search & Component Filters' }}</h2>
+        <p class="filter-card-subtitle">{{ i18n.dict().comp_filter_desc || 'Locate components by name, code, level, or operational status.' }}</p>
       </div>
-    } @else if (hierarchy().length === 0) {
-      <div class="card empty">
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <rect width="18" height="18" x="3" y="3" rx="2"/>
-          <path d="M3 9h18"/>
-          <path d="M9 21V9"/>
-        </svg>
-        <h3>No components registered</h3>
-        <p>Start by creating a top-level MENU, or click "Initialize Default Components" to load the Medhaa suite.</p>
-        <button type="button" class="btn" (click)="bootstrapDefaults()">
-          Initialize Default Components
+      <div class="filter-card-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="resetFilters()"
+          id="btn-filter-reset"
+          title="Reset search and filters"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M3 21v-5h5"/>
+          </svg>
+          {{ i18n.dict().comp_reset_filters || 'Reset' }}
+        </button>
+        <button
+          type="button"
+          class="btn"
+          (click)="openCreateModal('MENU')"
+          id="btn-filter-add"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {{ i18n.dict().comp_btn_register || 'Register Component' }}
         </button>
       </div>
-    } @else {
-      <div class="menu-cards">
-        @for (item of hierarchy(); track item.menu.id) {
-          <div class="card menu-card">
-            <!-- Level 1: Menu Header -->
-            <div class="menu-card-header">
-              <div class="menu-title-group">
-                <span class="badge badge--neutral">MENU</span>
-                <strong class="menu-name">{{ item.menu.name }}</strong>
-                <code class="code-badge">{{ item.menu.code }}</code>
-                <span class="meta-tag">Order: {{ item.menu.sortOrder }}</span>
-              </div>
-              <div class="menu-actions">
-                <button
-                  type="button"
-                  class="btn btn--outline btn-sm"
-                  (click)="openCreateModal('SUBMENU', item.menu.id)"
-                  title="Add Submenu to this Menu"
-                >
-                  + Add Page
-                </button>
-                <button
-                  type="button"
-                  class="btn btn--outline btn-sm"
-                  (click)="openEditModal(item.menu)"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  class="btn btn--danger btn-sm"
-                  (click)="confirmDelete(item.menu)"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+    </div>
 
-            <!-- Level 2: Submenus -->
-            <div class="submenus-container">
-              @for (sub of item.submenus; track sub.submenu.id) {
-                <div class="submenu-row">
-                  <div class="submenu-header">
-                    <div class="submenu-title-group">
-                      <span class="badge badge--ok">SUBMENU</span>
-                      <strong class="submenu-name">{{ sub.submenu.name }}</strong>
-                      <code class="code-badge">{{ sub.submenu.code }}</code>
-                      <span class="route-tag">{{ sub.submenu.route }}</span>
-                      @if (sub.submenu.helpText) {
-                        <small class="help-tag">{{ sub.submenu.helpText }}</small>
+    <div class="filter-grid">
+      <!-- Search input -->
+      <div class="field">
+        <label for="input-search-components">{{ i18n.dict().comp_th_name || 'Component Name' }}</label>
+        <div class="search-field-wrapper">
+          <svg class="i search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            id="input-search-components"
+            type="search"
+            class="input search-input"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search by name, code, or route..."
+          />
+        </div>
+      </div>
+
+      <!-- Level filter -->
+      <div class="field">
+        <label for="select-component-level">{{ i18n.dict().comp_th_level || 'Hierarchy Level' }}</label>
+        <select
+          id="select-component-level"
+          class="input"
+          [ngModel]="levelFilter()"
+          (ngModelChange)="onLevelFilterChange($event)"
+        >
+          <option value="ALL">All Levels (Menus, Submenus, Functions)</option>
+          <option value="MENU">MENU (Level 1 — Sidebar)</option>
+          <option value="SUBMENU">SUBMENU (Level 2 — Pages)</option>
+          <option value="FUNCTIONALITY">FUNCTIONALITY (Level 3 — Actions)</option>
+        </select>
+      </div>
+
+      <!-- Status filter radio chips -->
+      <div class="field">
+        <label>{{ i18n.dict().comp_th_status || 'Status' }}</label>
+        <div class="status-radio-group">
+          <label class="radio-chip" [class.is-selected]="statusFilter() === 'ALL'">
+            <input
+              type="radio"
+              name="statusFilterRadio"
+              value="ALL"
+              [checked]="statusFilter() === 'ALL'"
+              (change)="onStatusFilterChange('ALL')"
+            />
+            <span>All</span>
+          </label>
+          <label class="radio-chip" [class.is-selected]="statusFilter() === 'ACTIVE'">
+            <input
+              type="radio"
+              name="statusFilterRadio"
+              value="ACTIVE"
+              [checked]="statusFilter() === 'ACTIVE'"
+              (change)="onStatusFilterChange('ACTIVE')"
+            />
+            <span class="status-indicator-dot dot-active"></span>
+            <span>Active</span>
+          </label>
+          <label class="radio-chip" [class.is-selected]="statusFilter() === 'INACTIVE'">
+            <input
+              type="radio"
+              name="statusFilterRadio"
+              value="INACTIVE"
+              [checked]="statusFilter() === 'INACTIVE'"
+              (change)="onStatusFilterChange('INACTIVE')"
+            />
+            <span class="status-indicator-dot dot-inactive"></span>
+            <span>Inactive</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 2: Main Tabular Structure (Matching Reference UI) -->
+  <section class="card table-card" aria-label="Component Inventory Table">
+    <!-- Card Toolbar Header -->
+    <div class="table-card-toolbar">
+      <div class="toolbar-left">
+        <div class="entries-selector">
+          <select
+            id="select-entries-per-page"
+            class="input entries-select"
+            [ngModel]="pageSize()"
+            (ngModelChange)="onPageSizeChange($event)"
+          >
+            <option [value]="10">10</option>
+            <option [value]="15">15</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+          <label for="select-entries-per-page" class="entries-label">
+            {{ i18n.dict().comp_entries_per_page || 'Entries per page' }}
+          </label>
+        </div>
+
+        <!-- View Switcher Tabs -->
+        <div class="view-switch-tabs">
+          <button
+            type="button"
+            class="view-tab-btn"
+            [class.is-active]="viewMode() === 'TABLE'"
+            (click)="viewMode.set('TABLE')"
+            id="btn-view-tabular"
+          >
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M3 15h18"/>
+              <path d="M9 3v18"/>
+            </svg>
+            {{ i18n.dict().comp_view_table || 'Tabular View' }}
+          </button>
+          <button
+            type="button"
+            class="view-tab-btn"
+            [class.is-active]="viewMode() === 'HIERARCHY'"
+            (click)="viewMode.set('HIERARCHY')"
+            id="btn-view-hierarchy"
+          >
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <rect width="7" height="7" x="3" y="3" rx="1"/>
+              <rect width="7" height="7" x="14" y="3" rx="1"/>
+              <rect width="7" height="7" x="14" y="14" rx="1"/>
+              <rect width="7" height="7" x="3" y="14" rx="1"/>
+            </svg>
+            {{ i18n.dict().comp_view_hierarchy || 'Hierarchy Cards' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="exportToCsv()"
+          [disabled]="filteredComponents().length === 0"
+          id="btn-export-csv"
+          title="Export filtered components to CSV"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          {{ i18n.dict().comp_btn_export || 'Export CSV' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="loadComponents()"
+          [disabled]="isLoading()"
+          id="btn-refresh-components"
+          title="Reload component registry"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- View Mode 1: Professional Tabular View (Default) -->
+    @if (viewMode() === 'TABLE') {
+      @if (isLoading()) {
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px 0;">
+          <div class="skeleton" style="height: 42px;"></div>
+          <div class="skeleton" style="height: 48px;"></div>
+          <div class="skeleton" style="height: 48px;"></div>
+          <div class="skeleton" style="height: 48px;"></div>
+          <div class="skeleton" style="height: 48px;"></div>
+        </div>
+      } @else if (filteredComponents().length === 0) {
+        <div class="empty">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M3 9h18"/>
+            <path d="M9 21V9"/>
+          </svg>
+          <h3>No components match your search criteria</h3>
+          <p>Try refining your search keyword or clearing the level/status filters.</p>
+          <button type="button" class="btn btn--outline" (click)="resetFilters()" style="margin-top: 10px;">
+            Clear Filters
+          </button>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="professional-table">
+            <thead>
+              <tr>
+                <th class="num">{{ i18n.dict().comp_th_sno || 'S.No.' }}</th>
+                <th>{{ i18n.dict().comp_th_name || 'Component Name' }}</th>
+                <th>{{ i18n.dict().comp_th_code || 'System Code' }}</th>
+                <th>{{ i18n.dict().comp_th_level || 'Level' }}</th>
+                <th>{{ i18n.dict().comp_th_parent || 'Parent Hierarchy' }}</th>
+                <th>{{ i18n.dict().comp_th_route || 'Route / Element' }}</th>
+                <th class="num">{{ i18n.dict().comp_th_order || 'Order' }}</th>
+                <th>{{ i18n.dict().comp_th_status || 'Status' }}</th>
+                <th class="num">{{ i18n.dict().comp_th_actions || 'Actions' }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (comp of paginatedComponents(); track comp.id; let idx = $index) {
+                <tr class="table-row">
+                  <td class="num font-mono">#{{ startEntryIndex() + idx }}</td>
+                  <td>
+                    <div class="component-name-cell">
+                      <strong>{{ comp.name }}</strong>
+                      @if (comp.helpText) {
+                        <small class="help-desc">{{ comp.helpText }}</small>
                       }
                     </div>
-                    <div class="submenu-actions">
+                  </td>
+                  <td>
+                    <code class="code-badge">{{ comp.code }}</code>
+                  </td>
+                  <td>
+                    @if (comp.level === 'MENU') {
+                      <span class="badge" style="background: color-mix(in srgb, var(--pri) 15%, transparent); color: var(--pri);">MENU</span>
+                    } @else if (comp.level === 'SUBMENU') {
+                      <span class="badge badge--ok">SUBMENU</span>
+                    } @else {
+                      <span class="badge badge--warn">FUNCTION</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="parent-hierarchy-text">{{ getParentName(comp.parentId) }}</span>
+                  </td>
+                  <td>
+                    @if (comp.route) {
+                      <span class="route-tag">{{ comp.route }}</span>
+                    } @else if (comp.elementType) {
+                      <span class="element-type-tag">{{ comp.elementType }}</span>
+                    } @else {
+                      <span style="color: var(--mu);">—</span>
+                    }
+                  </td>
+                  <td class="num">{{ comp.sortOrder }}</td>
+                  <td>
+                    @if (comp.active) {
+                      <span class="badge badge--ok">ACTIVE</span>
+                    } @else {
+                      <span class="badge badge--neutral">INACTIVE</span>
+                    }
+                  </td>
+                  <td class="num">
+                    <div class="action-buttons-group">
+                      @if (comp.level === 'MENU') {
+                        <button
+                          type="button"
+                          class="btn btn--outline btn-sm"
+                          (click)="openCreateModal('SUBMENU', comp.id)"
+                          title="Add Submenu to this Menu"
+                        >
+                          + Add Page
+                        </button>
+                      } @else if (comp.level === 'SUBMENU') {
+                        <button
+                          type="button"
+                          class="btn btn--outline btn-sm"
+                          (click)="openCreateModal('FUNCTIONALITY', comp.id)"
+                          title="Add Functionality to this Submenu"
+                        >
+                          + Add Action
+                        </button>
+                      }
+
                       <button
                         type="button"
                         class="btn btn--outline btn-sm"
-                        (click)="openCreateModal('FUNCTIONALITY', sub.submenu.id)"
-                        title="Add Functionality to this Submenu"
-                      >
-                        + Add Action
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn--outline btn-sm"
-                        (click)="openEditModal(sub.submenu)"
+                        (click)="openEditModal(comp)"
+                        title="Edit component settings"
                       >
                         Edit
                       </button>
+
                       <button
                         type="button"
-                        class="btn btn--danger btn-sm"
-                        (click)="confirmDelete(sub.submenu)"
+                        class="btn btn--outline btn--danger btn-sm"
+                        (click)="confirmDelete(comp)"
+                        title="Delete component"
                       >
                         Delete
                       </button>
                     </div>
-                  </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
 
-                  <!-- Level 3: Functionalities -->
-                  <div class="functionalities-area">
-                    <span class="func-area-label">Functionalities:</span>
-                    <div class="func-chips">
-                      @for (fn of sub.functionalities; track fn.id) {
-                        <div class="func-chip">
-                          <span class="badge badge--warn">{{ fn.elementType }}</span>
-                          <span class="func-name">{{ fn.name }}</span>
-                          <code class="func-code">{{ fn.code }}</code>
-                          <button
-                            type="button"
-                            class="chip-action-btn"
-                            (click)="openEditModal(fn)"
-                            title="Edit Functionality"
-                          >
-                            ✎
-                          </button>
-                          <button
-                            type="button"
-                            class="chip-action-btn chip-danger"
-                            (click)="confirmDelete(fn)"
-                            title="Delete Functionality"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      } @empty {
-                        <span class="empty-func">No granular functionalities registered for this page.</span>
-                      }
-                    </div>
+        <!-- Pagination Bar -->
+        <div class="table-pagination-footer">
+          <div class="pagination-info">
+            Showing <strong>{{ startEntryIndex() }}</strong> to <strong>{{ endEntryIndex() }}</strong> of <strong>{{ filteredComponents().length }}</strong> entries
+          </div>
+
+          <div class="pagination-controls">
+            <button
+              type="button"
+              class="btn btn--outline btn-sm"
+              (click)="prevPage()"
+              [disabled]="currentPage() === 1"
+              id="btn-prev-page"
+            >
+              Previous
+            </button>
+
+            <span class="page-indicator">
+              Page {{ currentPage() }} of {{ totalPages() }}
+            </span>
+
+            <button
+              type="button"
+              class="btn btn--outline btn-sm"
+              (click)="nextPage()"
+              [disabled]="currentPage() === totalPages()"
+              id="btn-next-page"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- View Mode 2: Hierarchy Visualizer Cards -->
+    @if (viewMode() === 'HIERARCHY') {
+      <div class="hierarchy-section">
+        <div class="section-top">
+          <h2>3-Level Component Hierarchy</h2>
+          <p class="section-desc">Strict rules: MENU &gt; SUBMENU &gt; FUNCTIONALITY. No skipping levels.</p>
+        </div>
+
+        @if (hierarchy().length === 0) {
+          <div class="card empty">
+            <p>No components found in hierarchy tree.</p>
+          </div>
+        } @else {
+          <div class="menu-cards">
+            @for (item of hierarchy(); track item.menu.id) {
+              <div class="card menu-card">
+                <!-- Level 1: Menu Header -->
+                <div class="menu-card-header">
+                  <div class="menu-title-group">
+                    <span class="badge" style="background: color-mix(in srgb, var(--pri) 15%, transparent); color: var(--pri);">MENU</span>
+                    <strong class="menu-name">{{ item.menu.name }}</strong>
+                    <code class="code-badge">{{ item.menu.code }}</code>
+                    <span class="meta-tag">Order: {{ item.menu.sortOrder }}</span>
+                  </div>
+                  <div class="menu-actions">
+                    <button
+                      type="button"
+                      class="btn btn--outline btn-sm"
+                      (click)="openCreateModal('SUBMENU', item.menu.id)"
+                    >
+                      + Add Page
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--outline btn-sm"
+                      (click)="openEditModal(item.menu)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--danger btn-sm"
+                      (click)="confirmDelete(item.menu)"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-              } @empty {
-                <div class="empty-subs">No submenus under this menu yet. Click "+ Add Page" above.</div>
-              }
-            </div>
+
+                <!-- Level 2: Submenus -->
+                <div class="submenus-container">
+                  @for (sub of item.submenus; track sub.submenu.id) {
+                    <div class="submenu-row">
+                      <div class="submenu-header">
+                        <div class="submenu-title-group">
+                          <span class="badge badge--ok">SUBMENU</span>
+                          <strong class="submenu-name">{{ sub.submenu.name }}</strong>
+                          <code class="code-badge">{{ sub.submenu.code }}</code>
+                          <span class="route-tag">{{ sub.submenu.route }}</span>
+                        </div>
+                        <div class="submenu-actions">
+                          <button
+                            type="button"
+                            class="btn btn--outline btn-sm"
+                            (click)="openCreateModal('FUNCTIONALITY', sub.submenu.id)"
+                          >
+                            + Add Action
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn--outline btn-sm"
+                            (click)="openEditModal(sub.submenu)"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn--danger btn-sm"
+                            (click)="confirmDelete(sub.submenu)"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Level 3: Functionalities -->
+                      <div class="functionalities-area">
+                        <span class="func-area-label">Functionalities:</span>
+                        <div class="func-chips">
+                          @for (fn of sub.functionalities; track fn.id) {
+                            <div class="func-chip">
+                              <span class="badge badge--warn">{{ fn.elementType }}</span>
+                              <span class="func-name">{{ fn.name }}</span>
+                              <code class="func-code">{{ fn.code }}</code>
+                              <button
+                                type="button"
+                                class="chip-action-btn"
+                                (click)="openEditModal(fn)"
+                              >
+                                ✎
+                              </button>
+                              <button
+                                type="button"
+                                class="chip-action-btn chip-danger"
+                                (click)="confirmDelete(fn)"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          } @empty {
+                            <span class="empty-func">No granular functionalities registered for this page.</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-subs">No submenus under this menu yet. Click "+ Add Page" above.</div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         }
       </div>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild, effect } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, effect, untracked } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from './services/theme.service';
@@ -32,20 +32,25 @@ export class App {
   readonly isCollapsed = signal<boolean>(false);
   readonly isDrawerOpen = signal<boolean>(false);
   readonly openMenuIds = signal<Set<number>>(new Set());
+  readonly currentUrl = signal<string>(this.router.url);
+
+  readonly isLoginPage = computed(() => this.currentUrl().startsWith('/login'));
 
   constructor() {
-    // Auto-open menu group containing active route on navigation
     this.router.events.subscribe((evt) => {
       if (evt instanceof NavigationEnd) {
-        this.autoOpenActiveGroup(evt.urlAfterRedirects || evt.url);
+        const url = evt.urlAfterRedirects || evt.url;
+        this.currentUrl.set(url);
+        this.autoOpenActiveGroup(url);
       }
     });
 
-    // Auto-open active group when resolvedTree loads
     effect(() => {
       const tree = this.permissions.resolvedTree();
       if (tree.length > 0) {
-        this.autoOpenActiveGroup(this.router.url);
+        untracked(() => {
+          this.autoOpenActiveGroup(this.router.url);
+        });
       }
     });
   }
@@ -86,17 +91,26 @@ export class App {
     this.switcherModal?.open();
   }
 
+  logout(): void {
+    this.auth.logout();
+  }
+
   private autoOpenActiveGroup(currentUrl: string): void {
     const cleanUrl = currentUrl.split('?')[0].split('#')[0];
     const tree = this.permissions.resolvedTree();
-    const next = new Set(this.openMenuIds());
+    const current = this.openMenuIds();
+    let changed = false;
+    const next = new Set(current);
 
     for (const menu of tree) {
-      const hasActiveChild = menu.submenus.some((s) => s.route === cleanUrl);
-      if (hasActiveChild) {
+      const hasActiveChild = menu.submenus?.some((s) => s.route === cleanUrl);
+      if (hasActiveChild && !next.has(menu.id)) {
         next.add(menu.id);
+        changed = true;
       }
     }
-    this.openMenuIds.set(next);
+    if (changed) {
+      this.openMenuIds.set(next);
+    }
   }
 }

@@ -1,3 +1,4 @@
+export * from './modal/modal.component';
 export * from './item-modal/item-modal.component';
 export * from './confirm-modal/confirm-modal.component';
 export * from './user-switcher-modal/user-switcher-modal.component';

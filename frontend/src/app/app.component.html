@@ -1,287 +1,310 @@
-<div class="app" [class.collapsed]="isCollapsed()" [class.drawer-open]="isDrawerOpen()">
-  <!-- Accessible Skip Link -->
-  <a href="#main-content" class="skip-link">{{ i18n.dict().skip_link }}</a>
+@if (isLoginPage()) {
+  <!-- Clean Login Layout without shell -->
+  <router-outlet></router-outlet>
+} @else {
+  <!-- Main Platform Shell -->
+  <div class="app" [class.collapsed]="isCollapsed()" [class.drawer-open]="isDrawerOpen()">
+    <!-- Accessible Skip Link -->
+    <a href="#main-content" class="skip-link">{{ i18n.dict().skip_link }}</a>
 
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
-    <!-- Brand -->
-    <div class="brand">
-      <svg class="i" style="width: 28px; height: 28px;" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
-      <span class="brand-name">{{ i18n.dict().brand_name }}</span>
-    </div>
-
-    <!-- Course / Batch Switcher -->
-    <div class="course-switch">
-      <div>
-        <strong>Medhaa Platform</strong>
-        <small>Dynamic Access Control</small>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
+      <!-- Brand -->
+      <div class="brand">
+        <svg class="i" style="width: 28px; height: 28px;" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span class="brand-name">{{ i18n.dict().brand_name }}</span>
       </div>
-      <span class="badge badge--ok">{{ i18n.dict().status_online }}</span>
-    </div>
 
-    <!-- Navigation Section -->
-    <div class="menu-section">Platform</div>
+      <!-- Active Session Status Badge -->
+      <div class="course-switch">
+        <div>
+          <strong>Medhaa Platform</strong>
+          <small>{{ auth.currentUser()?.username || 'Guest' }} · {{ auth.userType() || 'STUDENT' }}</small>
+        </div>
+        <span class="badge badge--ok">{{ i18n.dict().status_online }}</span>
+      </div>
 
-    <!-- Dynamic Navigation from Backend Resolved Tree -->
-    @for (menu of permissions.resolvedTree(); track menu.id) {
-      @if (menu.submenus.length === 1 && menu.submenus[0].route === '/') {
-        <!-- Single top route (e.g. Dashboard) -->
+      <!-- Navigation Section -->
+      <div class="menu-section">Navigation</div>
+
+      <!-- Dynamic Navigation from Backend Resolved Tree -->
+      @for (menu of permissions.resolvedTree(); track menu.id) {
+        @if (menu.submenus.length === 1 && menu.submenus[0].route === '/') {
+          <!-- Single top route: Dashboard -->
+          <a
+            [routerLink]="menu.submenus[0].route"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="menu-item"
+            [id]="'nav-' + menu.code.toLowerCase()"
+            (click)="closeDrawerOnNav()"
+          >
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <rect width="7" height="9" x="3" y="3" rx="1"/>
+              <rect width="7" height="5" x="14" y="3" rx="1"/>
+              <rect width="7" height="9" x="14" y="12" rx="1"/>
+              <rect width="7" height="5" x="3" y="16" rx="1"/>
+            </svg>
+            <span class="label">{{ menu.name }}</span>
+          </a>
+        } @else if (menu.submenus.length === 1 && menu.submenus[0].route === '/items') {
+          <a
+            [routerLink]="menu.submenus[0].route"
+            routerLinkActive="is-active"
+            class="menu-item"
+            [id]="'nav-' + menu.code.toLowerCase()"
+            (click)="closeDrawerOnNav()"
+          >
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+              <path d="m3.3 7 8.7 5 8.7-5"/>
+              <path d="M12 22V12"/>
+            </svg>
+            <span class="label">{{ menu.name }}</span>
+          </a>
+        } @else {
+          <!-- Collapsible Menu Group per AGENTS.md rules -->
+          <div class="menu-group" [class.is-open]="isMenuOpen(menu.id)">
+            <button
+              type="button"
+              class="menu-item menu-group-trigger"
+              (click)="toggleMenu(menu.id)"
+              [attr.aria-expanded]="isMenuOpen(menu.id)"
+            >
+              <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span class="label">{{ menu.name }}</span>
+              <svg class="i chevron-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+
+            @if (isMenuOpen(menu.id)) {
+              <div class="submenu">
+                @for (sub of menu.submenus; track sub.id) {
+                  <a
+                    [routerLink]="sub.route"
+                    routerLinkActive="is-active"
+                    class="menu-item submenu-item"
+                    [id]="'nav-' + sub.code.toLowerCase()"
+                    (click)="closeDrawerOnNav()"
+                  >
+                    <span class="label">{{ sub.name }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Super Admin Direct Access Fallback (Shown when tree has not yet been seeded) -->
+      @if (auth.isSuperAdmin() && permissions.resolvedTree().length === 0) {
+        <div class="menu-section">Platform Administration</div>
         <a
-          [routerLink]="menu.submenus[0].route"
+          routerLink="/"
           routerLinkActive="is-active"
           [routerLinkActiveOptions]="{ exact: true }"
           class="menu-item"
-          [id]="'nav-' + menu.code.toLowerCase()"
           (click)="closeDrawerOnNav()"
         >
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <rect width="7" height="9" x="3" y="3" rx="1"/>
-            <rect width="7" height="5" x="14" y="3" rx="1"/>
-            <rect width="7" height="9" x="14" y="12" rx="1"/>
-            <rect width="7" height="5" x="3" y="16" rx="1"/>
-          </svg>
-          <span class="label">{{ menu.name }}</span>
+          <span class="label">Dashboard</span>
         </a>
-      } @else if (menu.submenus.length === 1 && menu.submenus[0].route === '/items') {
         <a
-          [routerLink]="menu.submenus[0].route"
+          routerLink="/admin/components"
           routerLinkActive="is-active"
           class="menu-item"
-          [id]="'nav-' + menu.code.toLowerCase()"
           (click)="closeDrawerOnNav()"
         >
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-            <path d="m3.3 7 8.7 5 8.7-5"/>
-            <path d="M12 22V12"/>
-          </svg>
-          <span class="label">{{ menu.name }}</span>
-          <span class="badge menu-badge">Catalog</span>
+          <span class="label">Component Manager</span>
         </a>
-      } @else {
-        <!-- Collapsible Menu Group per AGENTS.md rules -->
-        <div class="menu-group" [class.is-open]="isMenuOpen(menu.id)">
-          <button
-            type="button"
-            class="menu-item menu-group-trigger"
-            (click)="toggleMenu(menu.id)"
-            [attr.aria-expanded]="isMenuOpen(menu.id)"
-          >
-            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            <span class="label">{{ menu.name }}</span>
-            <svg class="i chevron-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m6 9 6 6 6-6"/>
-            </svg>
-          </button>
+        <a
+          routerLink="/admin/roles"
+          routerLinkActive="is-active"
+          class="menu-item"
+          (click)="closeDrawerOnNav()"
+        >
+          <span class="label">Role Builder</span>
+        </a>
+        <a
+          routerLink="/admin/groups"
+          routerLinkActive="is-active"
+          class="menu-item"
+          (click)="closeDrawerOnNav()"
+        >
+          <span class="label">Group Manager</span>
+        </a>
+        <a
+          routerLink="/admin/users"
+          routerLinkActive="is-active"
+          class="menu-item"
+          (click)="closeDrawerOnNav()"
+        >
+          <span class="label">User Manager</span>
+        </a>
+        <a
+          routerLink="/admin/audit-logs"
+          routerLinkActive="is-active"
+          class="menu-item"
+          (click)="closeDrawerOnNav()"
+        >
+          <span class="label">Audit Logs</span>
+        </a>
+      }
 
-          @if (isMenuOpen(menu.id)) {
-            <div class="submenu">
-              @for (sub of menu.submenus; track sub.id) {
-                <a
-                  [routerLink]="sub.route"
-                  routerLinkActive="is-active"
-                  class="menu-item submenu-item"
-                  [id]="'nav-' + sub.code.toLowerCase()"
-                  (click)="closeDrawerOnNav()"
-                >
-                  <span class="label">{{ sub.name }}</span>
-                </a>
+      <!-- Pinned User Card with Switcher & Logout -->
+      <div class="user-card-container">
+        <div
+          class="user-card"
+          (click)="openUserSwitcher()"
+          role="button"
+          tabindex="0"
+          title="Click to switch active user account"
+          id="btn-user-card"
+        >
+          <div class="avatar" [class.is-super]="auth.isSuperAdmin()" aria-hidden="true">
+            {{ auth.currentUser()?.username ? auth.currentUser()!.username.charAt(0).toUpperCase() : 'U' }}
+          </div>
+          <div class="user-info-text">
+            <div class="user-title-row">
+              <strong>{{ auth.currentUser()?.username || 'Guest' }}</strong>
+              @if (auth.isSuperAdmin()) {
+                <span class="badge badge--ok" style="font-size: 10px; padding: 1px 5px;">Super</span>
               }
             </div>
-          }
+            <small>{{ auth.userType() || 'STUDENT' }} · Switch ⇄</small>
+          </div>
         </div>
-      }
-    }
 
-    <!-- Super Admin Direct Access Fallback (Always accessible for Super Admin) -->
-    @if (auth.isSuperAdmin() && permissions.resolvedTree().length === 0) {
-      <div class="menu-section">System Administration</div>
-      <a
-        routerLink="/"
-        routerLinkActive="is-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">Dashboard</span>
-      </a>
-      <a
-        routerLink="/admin/components"
-        routerLinkActive="is-active"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">Component Manager</span>
-      </a>
-      <a
-        routerLink="/admin/roles"
-        routerLinkActive="is-active"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">Role Builder</span>
-      </a>
-      <a
-        routerLink="/admin/groups"
-        routerLinkActive="is-active"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">Group Manager</span>
-      </a>
-      <a
-        routerLink="/admin/users"
-        routerLinkActive="is-active"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">User Manager</span>
-      </a>
-      <a
-        routerLink="/admin/audit-logs"
-        routerLinkActive="is-active"
-        class="menu-item"
-        (click)="closeDrawerOnNav()"
-      >
-        <span class="label">Audit Logs</span>
-      </a>
-    }
-
-    <!-- Pinned User Card with Interactive Context Switcher -->
-    <div
-      class="user-card"
-      (click)="openUserSwitcher()"
-      role="button"
-      tabindex="0"
-      title="Click to switch active user account"
-      id="btn-user-card"
-    >
-      <div class="avatar" [class.is-super]="auth.isSuperAdmin()" aria-hidden="true">
-        {{ auth.currentUser()?.username ? auth.currentUser()!.username.charAt(0).toUpperCase() : 'U' }}
+        <button
+          type="button"
+          class="btn-logout-sidebar"
+          (click)="logout()"
+          title="Sign out of platform"
+          id="btn-sidebar-logout"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+          <span>{{ i18n.dict().logout_btn || 'Sign Out' }}</span>
+        </button>
       </div>
-      <div class="user-info-text">
-        <div class="user-title-row">
-          <strong>{{ auth.currentUser()?.username || 'Guest' }}</strong>
-          @if (auth.isSuperAdmin()) {
-            <span class="badge badge--ok" style="font-size: 10px; padding: 1px 5px;">Super</span>
-          }
+    </aside>
+
+    <!-- Mobile Drawer Overlay -->
+    <div class="overlay" (click)="closeDrawer()" aria-hidden="true"></div>
+
+    <!-- Body layout containing Topbar and Routed Main View -->
+    <div class="app-body">
+      <header class="topbar">
+        <!-- Sidebar Toggle -->
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="toggleSidebar()"
+          aria-label="Toggle navigation menu"
+          id="btn-sidebar-toggle"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" x2="20" y1="12" y2="12"/>
+            <line x1="4" x2="20" y1="6" y2="6"/>
+            <line x1="4" x2="20" y1="18" y2="18"/>
+          </svg>
+        </button>
+
+        <!-- Global Search -->
+        <div class="search">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            type="search"
+            [placeholder]="i18n.dict().search_placeholder"
+            aria-label="Search"
+            id="global-search-input"
+          />
         </div>
-        <small>{{ auth.userType() || 'STUDENT' }} · Switch ⇄</small>
-      </div>
+
+        <div class="spacer"></div>
+
+        <!-- Dev User Switcher Button in Topbar -->
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="openUserSwitcher()"
+          title="Switch user account to test dynamic access control"
+          id="btn-topbar-switch-user"
+          style="display: flex; align-items: center; gap: 6px;"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>{{ auth.currentUser()?.username || 'Switch' }} ({{ auth.userType() || 'DEV' }})</span>
+        </button>
+
+        <!-- Bilingual Language Toggle -->
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="i18n.toggleLang()"
+          [attr.aria-label]="'Switch language to ' + i18n.dict().lang_toggle"
+          id="btn-lang-toggle"
+        >
+          {{ i18n.dict().lang_toggle }}
+        </button>
+
+        <!-- Theme Mode Toggle -->
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="theme.toggleTheme()"
+          [attr.aria-label]="i18n.dict().theme_toggle"
+          id="btn-theme-toggle"
+        >
+          @if (theme.mode() === 'dark') {
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+          } @else {
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          }
+        </button>
+
+        <!-- Logout Action in Topbar -->
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="logout()"
+          title="Sign Out"
+          id="btn-topbar-logout"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Main Content Routed Views -->
+      <main class="main" id="main-content">
+        <router-outlet></router-outlet>
+      </main>
     </div>
-  </aside>
 
-  <!-- Mobile Drawer Overlay -->
-  <div class="overlay" (click)="closeDrawer()" aria-hidden="true"></div>
-
-  <!-- Body layout containing Topbar and Routed Main View -->
-  <div class="app-body">
-    <header class="topbar">
-      <!-- Sidebar Toggle -->
-      <button
-        type="button"
-        class="icon-btn"
-        (click)="toggleSidebar()"
-        aria-label="Toggle navigation menu"
-        id="btn-sidebar-toggle"
-      >
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <line x1="4" x2="20" y1="12" y2="12"/>
-          <line x1="4" x2="20" y1="6" y2="6"/>
-          <line x1="4" x2="20" y1="18" y2="18"/>
-        </svg>
-      </button>
-
-      <!-- Global Search -->
-      <div class="search">
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.3-4.3"/>
-        </svg>
-        <input
-          type="search"
-          [placeholder]="i18n.dict().search_placeholder"
-          aria-label="Search"
-          id="global-search-input"
-        />
-      </div>
-
-      <div class="spacer"></div>
-
-      <!-- Dev User Switcher Button in Topbar -->
-      <button
-        type="button"
-        class="btn btn--outline"
-        (click)="openUserSwitcher()"
-        title="Switch user account to test dynamic access control"
-        id="btn-topbar-switch-user"
-        style="display: flex; align-items: center; gap: 6px;"
-      >
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span>{{ auth.currentUser()?.username || 'Switch User' }} ({{ auth.userType() || 'DEV' }})</span>
-      </button>
-
-      <!-- Bilingual Language Toggle -->
-      <button
-        type="button"
-        class="btn btn--outline"
-        (click)="i18n.toggleLang()"
-        [attr.aria-label]="'Switch language to ' + i18n.dict().lang_toggle"
-        id="btn-lang-toggle"
-      >
-        {{ i18n.dict().lang_toggle }}
-      </button>
-
-      <!-- Theme Mode Toggle -->
-      <button
-        type="button"
-        class="icon-btn"
-        (click)="theme.toggleTheme()"
-        [attr.aria-label]="i18n.dict().theme_toggle"
-        id="btn-theme-toggle"
-      >
-        @if (theme.mode() === 'dark') {
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-          </svg>
-        } @else {
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
-        }
-      </button>
-
-      <!-- Notifications -->
-      <button
-        type="button"
-        class="icon-btn"
-        aria-label="View notifications"
-        id="btn-notifications"
-      >
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-        </svg>
-        <span class="dot" aria-hidden="true">1</span>
-      </button>
-    </header>
-
-    <!-- Main Content Routed Views -->
-    <main class="main" id="main-content">
-      <router-outlet></router-outlet>
-    </main>
+    <!-- User Switcher Modal Component -->
+    <app-user-switcher-modal #switcherModal />
   </div>
-
-  <!-- User Switcher Modal Component -->
-  <app-user-switcher-modal #switcherModal />
-</div>
+}

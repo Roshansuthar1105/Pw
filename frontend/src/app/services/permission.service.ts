@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, effect } from '@angular/core';
+import { Injectable, signal, inject, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { MenuTree, ResolvedPermissions, AuthResponse } from '../models/rbac.model';
@@ -21,7 +21,9 @@ export class PermissionService {
     effect(() => {
       const user = this.authService.currentUser();
       if (user) {
-        this.fetchPermissions();
+        untracked(() => {
+          this.fetchPermissions();
+        });
       } else {
         this.resolvedTree.set([]);
         this.permissionCodes.set(new Set());

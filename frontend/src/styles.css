@@ -59,7 +59,7 @@
   --spacing-rail: 74px;
 
   /* Max width */
-  --max-width-page: 1180px;
+  --max-width-page: 100%;
 
   /* Transitions */
   --transition-duration-default: 200ms;

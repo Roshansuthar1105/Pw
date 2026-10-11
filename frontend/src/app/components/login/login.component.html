@@ -1,0 +1,134 @@
+<div class="login-wrapper">
+  <!-- Top Utility Controls (Language and Theme) -->
+  <header class="login-nav">
+    <div class="brand-minimal">
+      <svg class="i" style="width: 24px; height: 24px; color: var(--pri);" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span class="brand-text">Medhaa</span>
+    </div>
+
+    <div class="nav-controls">
+      <button
+        type="button"
+        class="btn btn--outline btn-sm"
+        (click)="i18n.toggleLang()"
+        [attr.aria-label]="i18n.dict().lang_toggle"
+        id="btn-login-lang"
+      >
+        {{ i18n.dict().lang_toggle }}
+      </button>
+
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="theme.toggleTheme()"
+        [attr.aria-label]="i18n.dict().theme_toggle"
+        id="btn-login-theme"
+      >
+        @if (theme.mode() === 'dark') {
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        } @else {
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- Centered Login Box -->
+  <main class="login-main">
+    <div class="card login-card">
+      <div class="card-header-area">
+        <div class="brand-badge">
+          <svg class="i" style="width: 28px; height: 28px; color: var(--pri);" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h1 class="login-title">{{ i18n.dict().login_title || 'Sign in to Platform' }}</h1>
+        <p class="login-subtitle">
+          {{ i18n.dict().login_subtitle || 'Enter your credentials to access your dashboard and courses.' }}
+        </p>
+      </div>
+
+      <!-- Error Alert -->
+      @if (errorMessage()) {
+        <div class="alert alert--error" role="alert" style="margin-top: 14px;">
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Form -->
+      <form (ngSubmit)="submit()" class="login-form">
+        <div class="field">
+          <label for="login-username">{{ i18n.dict().login_username || 'Username or Email' }}</label>
+          <input
+            id="login-username"
+            type="text"
+            class="input"
+            [ngModel]="username()"
+            (ngModelChange)="username.set($event)"
+            name="username"
+            required
+            autocomplete="username"
+            placeholder="e.g. superadmin, teacher_demo"
+          />
+        </div>
+
+        <div class="field">
+          <label for="login-password">{{ i18n.dict().login_password || 'Password' }}</label>
+          <input
+            id="login-password"
+            type="password"
+            class="input"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn--lg"
+          [disabled]="isSubmitting()"
+          id="btn-login-submit"
+          style="width: 100%; margin-top: 6px;"
+        >
+          {{ isSubmitting() ? (i18n.dict().login_signing_in || 'Signing in...') : (i18n.dict().login_btn || 'Sign In') }}
+        </button>
+      </form>
+
+      <!-- Quick Demo Sign-In Chips -->
+      <div class="demo-section">
+        <div class="demo-divider">
+          <span>{{ i18n.dict().login_quick_demo || 'Quick Demo Sign-In' }}</span>
+        </div>
+
+        <div class="demo-chips">
+          @for (acc of demoAccounts; track acc.username) {
+            <button
+              type="button"
+              class="demo-chip"
+              (click)="selectDemoAccount(acc)"
+              [disabled]="isSubmitting()"
+              id="demo-btn-{{ acc.username }}"
+            >
+              <div class="demo-chip-content">
+                <strong>{{ acc.label }}</strong>
+                <small>{{ acc.badge }}</small>
+              </div>
+              <span class="badge badge--neutral">{{ acc.role }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

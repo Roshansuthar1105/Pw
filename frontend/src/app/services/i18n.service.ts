@@ -19,7 +19,7 @@ export class I18nService {
   private readonly storageKey = 'medhaa-lang';
   readonly lang = signal<SupportedLang>('en');
 
-  readonly dict = computed(() => TRANSLATIONS[this.lang()]);
+  readonly dict = computed<typeof en>(() => TRANSLATIONS[this.lang()] as unknown as typeof en);
 
   constructor() {
     this.initLang();

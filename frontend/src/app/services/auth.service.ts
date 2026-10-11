@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { User, AuthResponse } from '../models/rbac.model';
 import { ApiResponse } from '../models/api-response.model';
@@ -9,6 +10,7 @@ import { ApiResponse } from '../models/api-response.model';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   private readonly TOKEN_KEY = 'pw_auth_token';
 
   readonly currentUser = signal<User | null>(null);
@@ -33,31 +35,11 @@ export class AuthService {
           }
         }),
         catchError(() => {
-          this.autoDevLogin();
+          this.clearSession();
           return of(null);
         })
       ).subscribe();
-    } else {
-      this.autoDevLogin();
     }
-  }
-
-  private autoDevLogin(): void {
-    // Dev convenience: auto-login as superadmin if no valid token
-    this.http.post<ApiResponse<AuthResponse>>('/api/auth/login', {
-      username: 'superadmin',
-      password: 'Admin@123'
-    }).pipe(
-      tap(res => {
-        if (res.data) {
-          this.setSession(res.data);
-        }
-      }),
-      catchError(err => {
-        console.warn('Auto dev login failed (backend starting up):', err);
-        return of(null);
-      })
-    ).subscribe();
   }
 
   login(username: string, password: string): Observable<ApiResponse<AuthResponse>> {
@@ -87,6 +69,11 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearSession();
+    this.router.navigate(['/login']);
+  }
+
+  private clearSession(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     this.token.set(null);
     this.currentUser.set(null);

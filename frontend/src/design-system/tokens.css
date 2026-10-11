@@ -120,7 +120,7 @@ table { font-variant-numeric: tabular-nums; }
 .search input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--bd); border-radius: var(--r-ctl); background: var(--sf); }
 .search > svg { position: absolute; left: 10px; top: 9px; color: var(--mu); }
 .spacer { flex: 1; }
-.main { padding: 24px; max-width: 1180px; width: 100%; }
+.main { padding: 24px; width: 100%; min-width: 0; }
 .breadcrumb { color: var(--mu); font-size: 13px; margin-bottom: 6px; }
 .breadcrumb [aria-current='page'] { color: var(--tx); }
 .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -200,8 +200,27 @@ input[type='checkbox'], input[type='radio'] { accent-color: var(--pri); width: 1
 .dropdown button:hover { background: var(--sf2); }
 .dot { position: absolute; top: -4px; right: -4px; background: var(--bad); color: #fff; font-size: 10px; border-radius: 99px; padding: 0 5px; }
 
-dialog { border: 1px solid var(--bd); border-radius: var(--r-dlg); padding: 24px; max-width: 460px; width: 92%; background: var(--sf); color: var(--tx); box-shadow: var(--shadow-pop); }
-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-dlg);
+  padding: 24px;
+  max-width: 460px;
+  width: 92%;
+  max-height: calc(100dvh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--sf);
+  color: var(--tx);
+  box-shadow: var(--shadow-pop);
+}
+dialog::backdrop {
+  background: rgba(15, 23, 42, .55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
 .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--tx); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 60; }

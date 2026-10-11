@@ -1,4 +1,4 @@
-import { Directive, Input, TemplateRef, ViewContainerRef, inject, effect } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef, inject, effect, untracked } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 
 @Directive({
@@ -22,7 +22,9 @@ export class HasPermissionDirective {
     effect(() => {
       // Re-evaluate whenever permissions change
       this.permissionService.permissionCodes();
-      this.updateView();
+      untracked(() => {
+        this.updateView();
+      });
     });
   }
 

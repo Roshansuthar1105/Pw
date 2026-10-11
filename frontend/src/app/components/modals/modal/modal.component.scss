@@ -1,0 +1,123 @@
+.app-modal-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-dlg, 16px);
+  background-color: var(--sf);
+  color: var(--tx);
+  box-shadow: var(--shadow-pop);
+  width: min(92vw, var(--modal-max-width, 580px));
+  max-width: var(--modal-max-width, 580px);
+  max-height: calc(100dvh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  z-index: 50;
+
+  &:not([open]) {
+    display: none;
+  }
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background-color: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+.modal-surface {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--bd);
+  background-color: var(--sf);
+  flex-shrink: 0;
+}
+
+.modal-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tx);
+  letter-spacing: -0.01em;
+}
+
+.modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--mu);
+}
+
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: var(--r-item, 9px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--mu);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background-color: var(--sf2);
+    color: var(--tx);
+    border-color: var(--bd);
+  }
+
+  &:focus-visible {
+    outline: var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--bd);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: var(--sf);
+  flex-shrink: 0;
+
+  &:empty {
+    display: none;
+  }
+}

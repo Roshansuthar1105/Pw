@@ -135,7 +135,7 @@ For Hindi content: line-height ≥ 1.65, never use `uppercase` or negative lette
 ┌────────────┬──────────────────────────────────────────────┐
 │ Sidebar    │ Topbar (sticky)                              │
 │ 264px      ├──────────────────────────────────────────────┤
-│ (74px rail)│ Main  (padding 24, max-width 1180)           │
+│ (74px rail)│ Main  (padding 24, full available width)     │
 │ sticky,    │   Breadcrumb                                 │
 │ full height│   Page header (title + subtitle + actions)   │
 │            │   Content (cards / tables / forms)           │
@@ -144,7 +144,7 @@ For Hindi content: line-height ≥ 1.65, never use `uppercase` or negative lette
 
 - Grid: `grid-template-columns: var(--sw, 264px) 1fr`. Collapsed: `--sw: 74px`.
 - **Breakpoints:** `≤ 900px` = mobile/tablet drawer mode; `> 900px` = desktop sidebar. Content grids use `repeat(auto-fit, minmax(…, 1fr))` instead of fixed breakpoints where possible.
-- Content `max-width: 1180px`. Tables and wide charts scroll inside their own `overflow-x:auto` wrapper — the page body never scrolls sideways.
+- Content expands to 100% of available viewport width (`width: 100%`). Tables and wide charts scroll inside their own `overflow-x:auto` wrapper — the page body never scrolls sideways.
 - Honour safe areas: `env(safe-area-inset-*)` on sticky/fixed edges (PWA on Android/iOS).
 - **Exception:** the CBT test interface and PDF viewer are *full-screen focus layouts* with no sidebar (see §7).
 

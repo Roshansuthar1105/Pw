@@ -20,7 +20,15 @@ Copy this file to the repo root. Also save it as `CLAUDE.md`, `.cursorrules` or 
 - **Light and dark mode** must both work. Test at 360px, 768px and 1280px widths.
 - **Accessibility:** AA contrast, `:focus-visible` ring, keyboard operable, correct ARIA, touch targets of at least 40px.
 - **Bilingual & i18n JSON files:** no hard-coded user-facing strings and no inline translation dictionaries in services. All strings must live in separate `.json` files (`en.json`, `hi.json`) under `src/app/i18n/` (and `public/i18n/`). Allow ~30% longer Hindi text.
-- **Modals for Creation & Actions:** Never render inline create/edit/action forms below tables or main page content. Use dedicated modal components located in `src/app/components/modals/` (e.g., `ItemModalComponent`, `ConfirmModalComponent`) built with native `<dialog>` + `.dialog-actions` to open modals for creation, editing, or destructive confirmations.
+- **Modals for Creation & Actions:** Never render inline create/edit/action forms below tables or main page content. Use dedicated modal components located in `src/app/components/modals/` built with native `<dialog>` or the common `ModalComponent` (`<app-modal>`) + `.dialog-actions` to open modals for creation, editing, or destructive confirmations.
+- **Modal Centering & Backdrop:** Every modal MUST be centered both horizontally and vertically on screen (`position: fixed; inset: 0; margin: auto;`). Modals must NEVER appear off-center or glued to the top/left of the viewport. Every modal backdrop MUST use blur and fade (`dialog::backdrop { background-color: rgba(15, 23, 42, 0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }`).
+- **Common Modal Component (`<app-modal>`):** Always use or base modals on the reusable `ModalComponent` (`src/app/components/modals/modal/modal.component.ts`). It supports:
+  - `size`: preset variants (`xs`, `s`/`sm`, `m`/`md`, `l`/`lg`, `xl`, `full`) or custom measurements in `px` or `%` (e.g., `'500px'`, `'60%'`).
+  - `heading`: modal title rendered in the standard modal header.
+  - Top-right close button ('X' icon, outline SVG, 18px stroke 1.8, touch target >= 40px) to dismiss.
+  - Page/component rendering inside: either projected template (`<ng-content>`) or dynamic component outlet (`[component]="MyComponent"`).
+  - Current UI design system: tokens only (`var(--sf)`, `var(--bd)`, `var(--r-dlg)`, `var(--shadow-pop)`), light/dark mode support, and keyboard accessibility (ESC to close, backdrop click).
+- **Full Available Width Layout:** Main content area and routed pages (`.main`) MUST expand to fill 100% of the available viewport width (`width: 100%; min-width: 0;`). Never restrict pages with rigid max-width constraints (such as `max-width: 1180px`) that create empty margins or black voids on the right on wide displays. Content grids, cards, and tables must dynamically stretch to occupy the full available width.
 - **No fake UI.** Every button, link and toggle must do something real. If the feature is not built, do not render it.
 - **Permissions:** render menu items and actions only for allowed roles, and enforce the same check on the server.
 - **Label data kinds:** `Actual` (green), `Estimated` (amber, with range and "Not a guarantee"), `AI-generated` (primary), `Verified` (green), `Sample` (neutral).
@@ -38,7 +46,7 @@ Copy this file to the repo root. Also save it as `CLAUDE.md`, `.cursorrules` or 
 | Filter | `.chip[aria-pressed]` inside `.filters` |
 | Table | `.table-wrap > table`, numbers use `td.num` |
 | Form | `.field` + `label` + `.input`, errors in `.field .error` |
-| Dialog / Modal | native `<dialog>` + `.dialog-actions` in `components/modals/` |
+| Dialog / Modal | `<app-modal>` (common component) or native `<dialog>` + `.dialog-actions` in `components/modals/` (centered `position: fixed; inset: 0; margin: auto;` with backdrop blur) |
 | Feedback | `.toast.is-visible` (confirmations), `.alert--error` (errors) |
 | Empty state | `.empty` with icon, h3, one-line text, optional action |
 | Loading | `.skeleton` |

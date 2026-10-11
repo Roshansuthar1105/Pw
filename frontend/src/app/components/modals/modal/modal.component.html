@@ -1,0 +1,55 @@
+<dialog
+  #dialogElement
+  class="app-modal-dialog"
+  [class]="'size-' + normalizedSize()"
+  [style.--modal-max-width]="resolvedMaxWidth()"
+  [attr.aria-labelledby]="heading() ? headingId : null"
+  [attr.aria-label]="!heading() && ariaLabel() ? ariaLabel() : null"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-surface" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    @if (heading() || showCloseButton()) {
+      <header class="modal-header">
+        <div class="modal-header-text">
+          @if (heading()) {
+            <h2 [id]="headingId" class="modal-title">{{ heading() }}</h2>
+          }
+          @if (subtitle()) {
+            <p class="modal-subtitle">{{ subtitle() }}</p>
+          }
+        </div>
+
+        @if (showCloseButton()) {
+          <button
+            type="button"
+            class="modal-close-btn"
+            (click)="close()"
+            [attr.aria-label]="closeAriaLabel() || i18n.dict().modal_close || i18n.dict().btn_cancel || 'Close'"
+            title="Close"
+            id="btn-close-modal"
+          >
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        }
+      </header>
+    }
+
+    <!-- Content / Body -->
+    <div class="modal-body">
+      @if (component()) {
+        <ng-container *ngComponentOutlet="component()!; inputs: componentInputs()" />
+      }
+      <ng-content />
+    </div>
+
+    <!-- Actions / Footer if projected -->
+    <footer class="modal-footer">
+      <ng-content select="[modal-actions], .dialog-actions, [modal-footer]" />
+    </footer>
+  </div>
+</dialog>
