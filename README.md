@@ -78,6 +78,7 @@ docker run -d \
 
 ```bash
 cd backend
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/gradle/gradle/v8.10.2/gradle/wrapper/gradle-wrapper.jar" -OutFile "gradle\wrapper\gradle-wrapper.jar"
 ./gradlew bootRun
 # On Windows:
 gradlew.bat bootRun
