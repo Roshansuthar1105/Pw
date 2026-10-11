@@ -1,0 +1,185 @@
+<div class="page-container">
+  <!-- Toast -->
+  @if (toastMessage()) {
+    <div class="toast is-visible" role="status" aria-live="polite">
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+    <span class="sep">›</span>
+    <span>Access Control</span>
+    <span class="sep">›</span>
+    <span aria-current="page">Group Manager</span>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Group Manager</h1>
+      <p class="page-subtitle">
+        Organize users into cohorts and map groups to permission roles.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn"
+        (click)="openCreateModal()"
+        id="btn-create-group"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" x2="12" y1="5" y2="19"/>
+          <line x1="5" x2="19" y1="12" y2="12"/>
+        </svg>
+        Create Group
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <section class="kpi-grid" aria-label="Group Metrics">
+    <div class="card kpi">
+      <span class="label">Total Groups</span>
+      <span class="value">{{ totalGroups() }}</span>
+      <span class="delta">Configured</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Default System Groups</span>
+      <span class="value">{{ defaultGroups() }}</span>
+      <span class="delta">Auto-enrolled</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Custom Cohorts</span>
+      <span class="value">{{ customCohorts() }}</span>
+      <span class="delta">Flexible</span>
+    </div>
+  </section>
+
+  <!-- Groups Table -->
+  <section class="card table-card" aria-label="Groups List">
+    <div class="card-header-bar">
+      <h2>Platform Groups</h2>
+      <span class="count-badge">{{ groups().length }} groups</span>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        <div class="skeleton" style="height: 48px;"></div>
+        <div class="skeleton" style="height: 48px;"></div>
+      </div>
+    } @else if (groups().length === 0) {
+      <div class="empty">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <h3>No groups found</h3>
+        <p>System default groups should appear here once database migrations run.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Group Name</th>
+              <th>Group Code</th>
+              <th>Kind / Category</th>
+              <th>Assigned Roles</th>
+              <th class="num">Members</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (grp of groups(); track grp.id) {
+              <tr>
+                <td>
+                  <strong>{{ grp.name }}</strong>
+                  @if (grp.description) {
+                    <small style="display: block; color: var(--mu);">{{ grp.description }}</small>
+                  }
+                </td>
+                <td>
+                  <code class="code-badge">{{ grp.code }}</code>
+                </td>
+                <td>
+                  @if (grp.isDefault) {
+                    <span class="badge badge--ok">Default {{ grp.defaultForUserType }}</span>
+                  } @else {
+                    <span class="badge badge--neutral">Cohort</span>
+                  }
+                </td>
+                <td>
+                  <div class="role-tags">
+                    @for (rName of grp.roleNames; track rName) {
+                      <span class="badge badge--neutral">{{ rName }}</span>
+                    } @empty {
+                      <span style="color: var(--mu); font-size: 12px;">No roles assigned</span>
+                    }
+                  </div>
+                </td>
+                <td class="num">
+                  <button
+                    type="button"
+                    class="btn btn--outline btn-sm"
+                    (click)="openMembersModal(grp)"
+                  >
+                    {{ grp.userCount || 0 }} members
+                  </button>
+                </td>
+                <td style="text-align: right;">
+                  <button
+                    type="button"
+                    class="btn btn--outline btn-sm"
+                    (click)="openEditModal(grp)"
+                  >
+                    Edit Roles
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn-sm"
+                    [disabled]="grp.isSystem || grp.isDefault"
+                    (click)="confirmDelete(grp)"
+                    style="margin-left: 6px;"
+                    title="{{ grp.isDefault ? 'Default system groups cannot be deleted' : 'Delete group' }}"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Modals -->
+  <app-group-modal
+    #groupModal
+    (saved)="onGroupSaved()"
+  />
+
+  <app-group-members-modal
+    #membersModal
+  />
+
+  <app-confirm-modal
+    #confirmModal
+    title="Delete Group"
+    [message]="'Are you sure you want to delete group \'' + (pendingDelete()?.name || '') + '\'?'"
+    confirmText="Delete Group"
+    (confirmed)="executeDelete()"
+  />
+</div>

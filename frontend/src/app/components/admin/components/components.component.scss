@@ -1,0 +1,240 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mu);
+
+  .sep {
+    color: var(--bd);
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--tx);
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--mu);
+  margin: 4px 0 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.hierarchy-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-top {
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--tx);
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--mu);
+    margin: 4px 0 0;
+  }
+}
+
+.menu-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-card {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.menu-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 12px;
+}
+
+.menu-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.menu-name {
+  font-size: 16px;
+  color: var(--tx);
+}
+
+.code-badge {
+  font-family: monospace;
+  font-size: 11px;
+  background-color: var(--sf2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--bd);
+  color: var(--tx);
+}
+
+.meta-tag, .route-tag {
+  font-size: 12px;
+  color: var(--mu);
+}
+
+.help-tag {
+  font-size: 12px;
+  color: var(--mu);
+  font-style: italic;
+}
+
+.menu-actions, .submenu-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.submenus-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 12px;
+  border-left: 3px solid var(--bd);
+}
+
+.submenu-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+}
+
+.submenu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.submenu-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.submenu-name {
+  font-size: 14px;
+  color: var(--tx);
+}
+
+.functionalities-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px dashed var(--bd);
+}
+
+.func-area-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mu);
+}
+
+.func-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.func-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.func-name {
+  color: var(--tx);
+  font-weight: 500;
+}
+
+.func-code {
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--mu);
+}
+
+.chip-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--mu);
+  font-size: 11px;
+  padding: 0 2px;
+
+  &:hover {
+    color: var(--pri);
+  }
+
+  &.chip-danger:hover {
+    color: var(--bad);
+  }
+}
+
+.empty-subs, .empty-func {
+  font-size: 12px;
+  color: var(--mu);
+  font-style: italic;
+}

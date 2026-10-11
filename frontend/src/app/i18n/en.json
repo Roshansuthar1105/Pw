@@ -84,5 +84,14 @@
   "err_backend_offline": "Backend unreachable. Verify Spring Boot is running on port 8080.",
   "err_name_required": "Item name is required.",
   "err_search_failed": "Search request failed.",
-  "err_save_failed": "Failed to save item."
+  "err_save_failed": "Failed to save item.",
+
+  "user_switcher_title": "Switch Active User Context",
+  "user_switcher_desc": "Test how permissions, dynamic sidebar menus, and UI actions adapt across users.",
+  "user_switcher_btn": "Switch User",
+  "nav_components": "Component Manager",
+  "nav_roles": "Role Builder",
+  "nav_groups": "Group Manager",
+  "nav_users": "User Manager",
+  "nav_audit": "Audit Logs"
 }

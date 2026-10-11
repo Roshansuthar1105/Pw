@@ -1,0 +1,189 @@
+<div class="page-container">
+  <!-- Toast -->
+  @if (toastMessage()) {
+    <div class="toast is-visible" role="status" aria-live="polite">
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+    <span class="sep">›</span>
+    <span>Access Control</span>
+    <span class="sep">›</span>
+    <span aria-current="page">User Manager</span>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">User Manager</h1>
+      <p class="page-subtitle">
+        Manage accounts, domain identity (user_type), group memberships, and inspect resolved permissions.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn"
+        (click)="openCreateModal()"
+        id="btn-create-user"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" x2="12" y1="5" y2="19"/>
+          <line x1="5" x2="19" y1="12" y2="12"/>
+        </svg>
+        Create User
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <section class="kpi-grid" aria-label="User Metrics">
+    <div class="card kpi">
+      <span class="label">Total Accounts</span>
+      <span class="value">{{ totalUsers() }}</span>
+      <span class="delta">Registered</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Active Users</span>
+      <span class="value">{{ activeUsers() }}</span>
+      <span class="delta">Operational</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Super Admins</span>
+      <span class="value">{{ superAdmins() }}</span>
+      <span class="delta">Bypass Role</span>
+    </div>
+  </section>
+
+  <!-- Users Table -->
+  <section class="card table-card" aria-label="Users List">
+    <div class="card-header-bar">
+      <h2>Registered Accounts</h2>
+      <span class="count-badge">{{ users().length }} users</span>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        <div class="skeleton" style="height: 48px;"></div>
+        <div class="skeleton" style="height: 48px;"></div>
+      </div>
+    } @else if (users().length === 0) {
+      <div class="empty">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M6 21v-2a6 6 0 0 1 12 0v2"/>
+        </svg>
+        <h3>No users found</h3>
+        <p>Seed data will appear once backend database is up.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Domain Type</th>
+              <th>Super Admin</th>
+              <th>Groups</th>
+              <th>Status</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+                    <div>
+                      <strong>{{ user.username }}</strong>
+                      <small style="display: block; color: var(--mu);">{{ user.email }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge--neutral">{{ user.userType }}</span>
+                </td>
+                <td>
+                  @if (user.isSuperAdmin) {
+                    <span class="badge badge--ok">Super Admin</span>
+                  } @else {
+                    <span style="color: var(--mu); font-size: 13px;">No</span>
+                  }
+                </td>
+                <td>
+                  <div class="group-chips">
+                    @for (gName of user.groupNames; track gName) {
+                      <span class="badge badge--neutral">{{ gName }}</span>
+                    } @empty {
+                      <span style="color: var(--mu); font-size: 12px;">No groups</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span [class]="user.active ? 'badge badge--ok' : 'badge badge--bad'">
+                    {{ user.active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button
+                    type="button"
+                    class="btn btn--outline btn-sm"
+                    (click)="openInspectPermissions(user)"
+                    title="Inspect resolved permission tree and codes"
+                  >
+                    Inspect Access
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--outline btn-sm"
+                    (click)="openEditModal(user)"
+                    style="margin-left: 6px;"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn-sm"
+                    (click)="confirmDelete(user)"
+                    style="margin-left: 6px;"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Modals -->
+  <app-user-modal
+    #userModal
+    (saved)="onUserSaved()"
+  />
+
+  <app-user-permissions-modal
+    #permModal
+  />
+
+  <app-confirm-modal
+    #confirmModal
+    title="Delete User"
+    [message]="'Are you sure you want to delete user \'' + (pendingDelete()?.username || '') + '\'?'"
+    confirmText="Delete User"
+    (confirmed)="executeDelete()"
+  />
+</div>

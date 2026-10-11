@@ -1,0 +1,216 @@
+<dialog
+  #modalDialog
+  class="comp-dialog"
+  aria-labelledby="comp-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="comp-modal-title" class="modal-title">
+          {{ editingId() !== null ? 'Edit Component #' + editingId() : 'Register New Component' }}
+        </h2>
+        <p class="modal-subtitle">
+          Manage 3-tier navigation and UI element access control.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="modal-form">
+      <div class="form-grid">
+        <!-- Hierarchy Level -->
+        <div class="field">
+          <label for="comp-level">Component Level</label>
+          <select
+            id="comp-level"
+            class="input"
+            [disabled]="editingId() !== null"
+            [ngModel]="level()"
+            (ngModelChange)="onLevelChange($event)"
+            name="level"
+          >
+            <option value="MENU">MENU (Sidebar top-level)</option>
+            <option value="SUBMENU">SUBMENU (Page / Route)</option>
+            <option value="FUNCTIONALITY">FUNCTIONALITY (UI Element / Action)</option>
+          </select>
+        </div>
+
+        <!-- Parent Selection -->
+        @if (level() !== 'MENU') {
+          <div class="field">
+            <label for="comp-parent">
+              {{ level() === 'SUBMENU' ? 'Parent MENU' : 'Parent SUBMENU (Page)' }}
+            </label>
+            <select
+              id="comp-parent"
+              class="input"
+              [ngModel]="parentId()"
+              (ngModelChange)="parentId.set($event)"
+              name="parentId"
+              required
+            >
+              <option [ngValue]="null">-- Select Parent --</option>
+              @for (p of eligibleParents(); track p.id) {
+                <option [ngValue]="p.id">{{ p.name }} ({{ p.code }})</option>
+              }
+            </select>
+          </div>
+        }
+
+        <!-- Code -->
+        <div class="field">
+          <label for="comp-code">Component Code (Unique identifier)</label>
+          <input
+            id="comp-code"
+            type="text"
+            class="input"
+            [disabled]="editingId() !== null"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event)"
+            name="code"
+            placeholder="e.g. MENU_COURSES, FN_EXPORT_CSV"
+            required
+          />
+        </div>
+
+        <!-- Name -->
+        <div class="field">
+          <label for="comp-name">Display Name</label>
+          <input
+            id="comp-name"
+            type="text"
+            class="input"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="e.g. Course Materials, Export CSV"
+            required
+          />
+        </div>
+
+        <!-- Level-specific fields: MENU Icon -->
+        @if (level() === 'MENU') {
+          <div class="field">
+            <label for="comp-icon">Icon Name</label>
+            <select
+              id="comp-icon"
+              class="input"
+              [ngModel]="icon()"
+              (ngModelChange)="icon.set($event)"
+              name="icon"
+            >
+              <option value="layout-dashboard">layout-dashboard (Dashboard)</option>
+              <option value="package">package (Catalog / Items)</option>
+              <option value="shield">shield (Security / Admin)</option>
+              <option value="users">users (User Groups)</option>
+              <option value="file-text">file-text (Documents / Reports)</option>
+              <option value="settings">settings (Configuration)</option>
+            </select>
+          </div>
+        }
+
+        <!-- Level-specific fields: SUBMENU Route -->
+        @if (level() === 'SUBMENU') {
+          <div class="field">
+            <label for="comp-route">Page Route Path</label>
+            <input
+              id="comp-route"
+              type="text"
+              class="input"
+              [ngModel]="route()"
+              (ngModelChange)="route.set($event)"
+              name="route"
+              placeholder="e.g. /items, /admin/roles"
+              required
+            />
+          </div>
+
+          <div class="field field-full">
+            <label for="comp-help">Help Text / Subtitle</label>
+            <input
+              id="comp-help"
+              type="text"
+              class="input"
+              [ngModel]="helpText()"
+              (ngModelChange)="helpText.set($event)"
+              name="helpText"
+              placeholder="Brief explanation for the page"
+            />
+          </div>
+        }
+
+        <!-- Level-specific fields: FUNCTIONALITY Element Type -->
+        @if (level() === 'FUNCTIONALITY') {
+          <div class="field">
+            <label for="comp-element">Element Type</label>
+            <select
+              id="comp-element"
+              class="input"
+              [ngModel]="elementType()"
+              (ngModelChange)="elementType.set($event)"
+              name="elementType"
+            >
+              <option value="BUTTON">BUTTON (Action button)</option>
+              <option value="MODAL">MODAL (Popup / Dialog)</option>
+              <option value="TOGGLE">TOGGLE (Switch / Status control)</option>
+              <option value="EXPORT">EXPORT (Data export)</option>
+              <option value="LINK">LINK (Navigation link)</option>
+            </select>
+          </div>
+        }
+
+        <!-- Sort Order -->
+        <div class="field">
+          <label for="comp-sort">Sort Order</label>
+          <input
+            id="comp-sort"
+            type="number"
+            class="input"
+            [ngModel]="sortOrder()"
+            (ngModelChange)="sortOrder.set($event)"
+            name="sortOrder"
+            min="0"
+          />
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="close()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Saving...' : (editingId() !== null ? 'Update Component' : 'Create Component') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

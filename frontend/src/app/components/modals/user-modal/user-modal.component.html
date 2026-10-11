@@ -1,0 +1,171 @@
+<dialog
+  #modalDialog
+  class="user-dialog"
+  aria-labelledby="user-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="user-modal-title" class="modal-title">
+          {{ editingId() !== null ? 'Edit User: ' + username() : 'Create New User' }}
+        </h2>
+        <p class="modal-subtitle">
+          Manage user domain identity (user_type), super admin bypass, and group enrollments.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label for="user-name">Username</label>
+          <input
+            id="user-name"
+            type="text"
+            class="input"
+            [disabled]="editingId() !== null"
+            [ngModel]="username()"
+            (ngModelChange)="username.set($event)"
+            name="username"
+            placeholder="e.g. roshan_teacher"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="user-email">Email Address</label>
+          <input
+            id="user-email"
+            type="email"
+            class="input"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            placeholder="e.g. roshan@medhaa.edu"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="user-pwd">
+            Password {{ editingId() !== null ? '(Leave blank to keep unchanged)' : '' }}
+          </label>
+          <input
+            id="user-pwd"
+            type="password"
+            class="input"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            [required]="editingId() === null"
+          />
+        </div>
+
+        <div class="field">
+          <label for="user-type">Domain Identity (user_type)</label>
+          <select
+            id="user-type"
+            class="input"
+            [ngModel]="userType()"
+            (ngModelChange)="onUserTypeChange($event)"
+            name="userType"
+          >
+            <option value="STUDENT">STUDENT (Domain: learner)</option>
+            <option value="TEACHER">TEACHER (Domain: faculty)</option>
+            <option value="MENTOR">MENTOR (Domain: mentor / guide)</option>
+            <option value="ADMIN">ADMIN (Domain: staff / manager)</option>
+          </select>
+        </div>
+
+        <div class="field field-full">
+          <label class="checkbox-row">
+            <input
+              type="checkbox"
+              [ngModel]="isSuperAdmin()"
+              (ngModelChange)="isSuperAdmin.set($event)"
+              name="isSuperAdmin"
+            />
+            <span>
+              <strong>Super Administrator (is_super_admin)</strong>
+              <small style="display: block; color: var(--mu);">
+                Bypasses all permission checks and gets instant access to all menus, pages, and UI actions.
+              </small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Group Enrollment -->
+      <div class="groups-section">
+        <span class="section-title">
+          Group Enrollments ({{ selectedGroupIds().size }} selected)
+        </span>
+        <small class="section-note">
+          Every user is automatically linked to their user_type's default group. You may add them to additional cohorts.
+        </small>
+        <div class="groups-list">
+          @for (grp of allGroups(); track grp.id) {
+            <label class="group-checkbox-item" [class.is-default]="grp.id === defaultGroup()?.id">
+              <input
+                type="checkbox"
+                [checked]="isGroupSelected(grp.id)"
+                (change)="toggleGroup(grp.id)"
+              />
+              <div class="group-info">
+                <div class="group-name-row">
+                  <strong>{{ grp.name }}</strong>
+                  @if (grp.isDefault) {
+                    <span class="badge badge--ok">Default {{ grp.defaultForUserType }}</span>
+                  }
+                  @if (grp.isSystem) {
+                    <span class="badge badge--neutral">System</span>
+                  }
+                </div>
+                <small>{{ grp.code }}</small>
+              </div>
+            </label>
+          }
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="close()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Saving...' : (editingId() !== null ? 'Update User' : 'Create User') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

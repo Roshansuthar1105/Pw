@@ -1,0 +1,105 @@
+<dialog
+  #modalDialog
+  class="permissions-dialog"
+  aria-labelledby="perm-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="perm-modal-title" class="modal-title">
+          Resolved Access: {{ user()?.username }}
+        </h2>
+        <p class="modal-subtitle">
+          Identity: <span class="badge badge--neutral">{{ user()?.userType }}</span>
+          @if (user()?.isSuperAdmin) {
+            <span class="badge badge--ok" style="margin-left: 6px;">Super Admin Bypass</span>
+          }
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton" style="height: 180px; border-radius: 8px;"></div>
+    } @else if (permissions()) {
+      <div class="perm-body">
+        <!-- Flat codes set -->
+        <div class="section">
+          <span class="section-title">
+            Flat Component Codes ({{ permissions()?.flatCodes?.length || 0 }})
+          </span>
+          <div class="codes-chips">
+            @for (code of permissions()?.flatCodes; track code) {
+              <span class="chip">{{ code }}</span>
+            } @empty {
+              <span class="empty-note">No permissions resolved.</span>
+            }
+          </div>
+        </div>
+
+        <!-- Hierarchical Tree -->
+        <div class="section">
+          <span class="section-title">Hierarchical Navigation Tree</span>
+          <div class="tree-preview">
+            @for (menu of permissions()?.tree; track menu.id) {
+              <div class="menu-preview-item">
+                <div class="menu-hdr">
+                  <span class="node-icon">📁</span>
+                  <strong>{{ menu.name }}</strong>
+                  <small>{{ menu.code }}</small>
+                </div>
+
+                <div class="sub-list">
+                  @for (sub of menu.submenus; track sub.id) {
+                    <div class="sub-preview-item">
+                      <div class="sub-hdr">
+                        <span class="node-icon">📄</span>
+                        <span>{{ sub.name }}</span>
+                        <span class="badge badge--ok">{{ sub.route }}</span>
+                      </div>
+
+                      @if (sub.functionalities && sub.functionalities.length > 0) {
+                        <div class="func-list">
+                          @for (fn of sub.functionalities; track fn.id) {
+                            <span class="badge badge--warn">
+                              {{ fn.name }} ({{ fn.elementType }})
+                            </span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-note">Tree is empty for this user.</div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="close()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</dialog>

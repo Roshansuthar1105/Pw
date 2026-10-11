@@ -4,6 +4,7 @@ import com.template.app.dto.ApiResponse;
 import com.template.app.dto.ItemRequest;
 import com.template.app.dto.ItemResponse;
 import com.template.app.service.ItemService;
+import com.template.app.security.RequirePermission;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,18 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller for Item CRUD operations.
- *
- * Base URL: /api/items
- *
- * Endpoints:
- *   GET    /api/items             → List all items
- *   GET    /api/items/active      → List active items only
- *   GET    /api/items/{id}        → Get item by ID
- *   GET    /api/items/search?q=.. → Search items by name
- *   POST   /api/items             → Create a new item
- *   PUT    /api/items/{id}        → Update an item
- *   DELETE /api/items/{id}        → Delete an item
+ * REST Controller for Item CRUD operations guarded by component permissions.
  */
 @RestController
 @RequestMapping("/items")
@@ -54,6 +44,7 @@ public class ItemController {
     }
 
     @PostMapping
+    @RequirePermission("FN_ITEMS_CREATE")
     public ResponseEntity<ApiResponse<ItemResponse>> create(@Valid @RequestBody ItemRequest request) {
         ItemResponse created = itemService.create(request);
         return ResponseEntity
@@ -62,6 +53,7 @@ public class ItemController {
     }
 
     @PutMapping("/{id}")
+    @RequirePermission("FN_ITEMS_EDIT")
     public ResponseEntity<ApiResponse<ItemResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody ItemRequest request) {
@@ -70,6 +62,7 @@ public class ItemController {
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission("FN_ITEMS_DELETE")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         itemService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Item deleted successfully", null));

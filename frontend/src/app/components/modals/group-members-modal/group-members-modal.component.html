@@ -1,0 +1,68 @@
+<dialog
+  #modalDialog
+  class="members-dialog"
+  aria-labelledby="members-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="members-modal-title" class="modal-title">
+          Group Members: {{ group()?.name }}
+        </h2>
+        <p class="modal-subtitle">
+          Users enrolled in group ({{ group()?.code }}).
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton" style="height: 140px; border-radius: 8px;"></div>
+    } @else {
+      <div class="members-list">
+        @for (user of members(); track user.id) {
+          <div class="member-item">
+            <div class="avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+            <div class="member-info">
+              <div class="member-name-row">
+                <strong>{{ user.username }}</strong>
+                <span class="badge badge--neutral">{{ user.userType }}</span>
+                @if (user.isSuperAdmin) {
+                  <span class="badge badge--ok">Super Admin</span>
+                }
+              </div>
+              <small class="member-email">{{ user.email }}</small>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty">
+            <p>No users enrolled in this group yet.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="close()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</dialog>

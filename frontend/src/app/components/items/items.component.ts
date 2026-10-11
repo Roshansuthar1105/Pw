@@ -6,11 +6,18 @@ import { Item, ItemRequest } from '../../models/item.model';
 import { I18nService } from '../../services/i18n.service';
 import { ItemModalComponent } from '../modals/item-modal/item-modal.component';
 import { ConfirmModalComponent } from '../modals/confirm-modal/confirm-modal.component';
+import { HasPermissionDirective } from '../../directives/has-permission.directive';
 
 @Component({
   selector: 'app-items',
   standalone: true,
-  imports: [CommonModule, FormsModule, ItemModalComponent, ConfirmModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ItemModalComponent,
+    ConfirmModalComponent,
+    HasPermissionDirective
+  ],
   templateUrl: './items.component.html',
   styleUrl: './items.component.scss'
 })

@@ -10,7 +10,7 @@
     <p>{{ i18n.dict().items_subtitle }}</p>
   </div>
   <div class="actions">
-    <button type="button" class="btn" (click)="openCreateForm()" id="btn-header-create">
+    <button *hasPermission="'FN_ITEMS_CREATE'" type="button" class="btn" (click)="openCreateForm()" id="btn-header-create">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
         <line x1="12" x2="12" y1="5" y2="19"/>
         <line x1="5" x2="19" y1="12" y2="12"/>
@@ -186,6 +186,7 @@
               <td class="num">
                 <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
                   <button
+                    *hasPermission="'FN_ITEMS_EDIT'"
                     type="button"
                     class="btn btn--outline"
                     (click)="startEdit(item)"
@@ -199,6 +200,7 @@
                     {{ i18n.dict().action_edit }}
                   </button>
                   <button
+                    *hasPermission="'FN_ITEMS_DELETE'"
                     type="button"
                     class="btn btn--outline btn--danger"
                     (click)="promptDelete(item)"

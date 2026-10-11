@@ -1,0 +1,179 @@
+<dialog
+  #modalDialog
+  class="role-dialog"
+  aria-labelledby="role-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="role-modal-title" class="modal-title">
+          {{ editingId() !== null ? 'Edit Role: ' + name() : 'Create New Permission Role' }}
+        </h2>
+        <p class="modal-subtitle">
+          Define access permissions by bundling components with the checkbox tree.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label for="role-name">Role Name</label>
+          <input
+            id="role-name"
+            type="text"
+            class="input"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="e.g. Grade Manager, Content Viewer"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="role-code">Role Code (Unique)</label>
+          <input
+            id="role-code"
+            type="text"
+            class="input"
+            [disabled]="editingId() !== null"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event)"
+            name="code"
+            placeholder="e.g. ROLE_GRADE_MANAGER"
+            required
+          />
+        </div>
+
+        <div class="field field-full">
+          <label for="role-desc">Description</label>
+          <input
+            id="role-desc"
+            type="text"
+            class="input"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            name="description"
+            placeholder="Brief scope of pages and actions granted by this role"
+          />
+        </div>
+      </div>
+
+      <!-- Component Selection Checkbox Tree -->
+      <div class="tree-section">
+        <div class="tree-header">
+          <span class="tree-title">
+            Assigned Components ({{ selectedIds().size }} selected)
+          </span>
+          <div class="tree-actions">
+            <button type="button" class="btn btn--outline btn-sm" (click)="selectAll()">
+              Select All
+            </button>
+            <button type="button" class="btn btn--outline btn-sm" (click)="clearAll()">
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        <div class="tree-container">
+          @for (menuNode of componentTree(); track menuNode.component.id) {
+            <div class="tree-node tree-menu">
+              <label class="tree-label">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked(menuNode.component.id)"
+                  (change)="toggleNode(menuNode)"
+                />
+                <span class="node-icon">📁</span>
+                <strong class="node-name">{{ menuNode.component.name }}</strong>
+                <span class="badge badge--neutral">MENU</span>
+                <small class="node-code">{{ menuNode.component.code }}</small>
+              </label>
+
+              <!-- Level 2: Submenus -->
+              <div class="sub-tree">
+                @for (subNode of menuNode.children; track subNode.component.id) {
+                  <div class="tree-node tree-submenu">
+                    <label class="tree-label">
+                      <input
+                        type="checkbox"
+                        [checked]="isChecked(subNode.component.id)"
+                        (change)="toggleNode(subNode)"
+                      />
+                      <span class="node-icon">📄</span>
+                      <span class="node-name">{{ subNode.component.name }}</span>
+                      <span class="badge badge--ok">SUBMENU</span>
+                      <small class="node-code">{{ subNode.component.route }}</small>
+                    </label>
+
+                    <!-- Level 3: Functionalities -->
+                    @if (subNode.children.length > 0) {
+                      <div class="func-tree">
+                        @for (funcNode of subNode.children; track funcNode.component.id) {
+                          <label class="tree-label func-label">
+                            <input
+                              type="checkbox"
+                              [checked]="isChecked(funcNode.component.id)"
+                              (change)="toggleNode(funcNode)"
+                            />
+                            <span class="node-name">{{ funcNode.component.name }}</span>
+                            <span class="badge badge--warn">{{ funcNode.component.elementType }}</span>
+                            <small class="node-code">{{ funcNode.component.code }}</small>
+                          </label>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-tree">
+              No components registered yet. Use the Component Manager to add menus, submenus, and functionalities.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="close()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Saving...' : (editingId() !== null ? 'Update Role' : 'Create Role') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

@@ -1,0 +1,135 @@
+<dialog
+  #modalDialog
+  class="group-dialog"
+  aria-labelledby="group-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="group-modal-title" class="modal-title">
+          {{ editingId() !== null ? 'Edit Group: ' + name() : 'Create New User Group' }}
+        </h2>
+        <p class="modal-subtitle">
+          Group container for users (cohorts, batches, categories) and assigned roles.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label for="group-name">
+            Group Name
+            @if (isProtected()) {
+              <span class="badge badge--warn" style="margin-left: 6px;">Protected</span>
+            }
+          </label>
+          <input
+            id="group-name"
+            type="text"
+            class="input"
+            [disabled]="isProtected()"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="e.g. Science Batch 2024, Lab Assistants"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="group-code">Group Code (Unique)</label>
+          <input
+            id="group-code"
+            type="text"
+            class="input"
+            [disabled]="editingId() !== null"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event)"
+            name="code"
+            placeholder="e.g. GRP_SCIENCE_2024"
+            required
+          />
+        </div>
+
+        <div class="field field-full">
+          <label for="group-desc">Description</label>
+          <input
+            id="group-desc"
+            type="text"
+            class="input"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            name="description"
+            placeholder="Purpose and cohort description"
+          />
+        </div>
+      </div>
+
+      <!-- Assign Roles -->
+      <div class="roles-section">
+        <span class="section-title">
+          Assign Roles to Group ({{ selectedRoleIds().size }} selected)
+        </span>
+        <div class="roles-list">
+          @for (role of allRoles(); track role.id) {
+            <label class="role-checkbox-item">
+              <input
+                type="checkbox"
+                [checked]="isRoleSelected(role.id)"
+                (change)="toggleRole(role.id)"
+              />
+              <div class="role-info">
+                <strong>{{ role.name }}</strong>
+                <small>{{ role.code }}</small>
+              </div>
+            </label>
+          } @empty {
+            <div class="empty-roles">
+              No roles found. Create roles in the Role Builder first.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="close()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Saving...' : (editingId() !== null ? 'Update Group' : 'Create Group') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

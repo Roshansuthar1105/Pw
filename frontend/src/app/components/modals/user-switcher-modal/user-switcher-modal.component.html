@@ -1,0 +1,101 @@
+<dialog
+  #switcherDialog
+  class="switcher-dialog"
+  aria-labelledby="switcher-modal-title"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 id="switcher-modal-title" class="modal-title">
+          {{ i18n.dict().user_switcher_title || 'Switch Active User Context' }}
+        </h2>
+        <p class="modal-subtitle">
+          {{ i18n.dict().user_switcher_desc || 'Test how permissions, dynamic sidebar menus, and UI actions adapt across users.' }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="close()"
+        aria-label="Close"
+        id="btn-close-switcher-modal"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton" style="height: 120px; border-radius: 8px;"></div>
+    } @else {
+      <div class="user-list">
+        @for (user of users(); track user.id) {
+          <div
+            class="user-item"
+            [class.is-active]="auth.currentUser()?.id === user.id"
+            (click)="switchUser(user)"
+            role="button"
+            tabindex="0"
+            [attr.aria-pressed]="auth.currentUser()?.id === user.id"
+          >
+            <div class="user-avatar" [class.is-super]="user.isSuperAdmin">
+              {{ user.username.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-details">
+              <div class="user-name-row">
+                <strong class="user-name">{{ user.username }}</strong>
+                @if (user.isSuperAdmin) {
+                  <span class="badge badge--ok">Super Admin</span>
+                }
+                <span class="badge badge--neutral">{{ user.userType }}</span>
+                @if (auth.currentUser()?.id === user.id) {
+                  <span class="badge badge--ok" style="font-weight: 700;">Active</span>
+                }
+              </div>
+              <div class="user-meta">
+                <span class="user-email">{{ user.email }}</span>
+                @if (user.groupNames && user.groupNames.length > 0) {
+                  <span class="user-groups">Groups: {{ user.groupNames.join(', ') }}</span>
+                }
+              </div>
+            </div>
+            <div class="switch-action">
+              <button
+                type="button"
+                class="btn btn--outline"
+                [disabled]="auth.currentUser()?.id === user.id"
+              >
+                {{ auth.currentUser()?.id === user.id ? 'Current' : 'Switch' }}
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" x2="12" y1="8" y2="12"/>
+            </svg>
+            <h3>No users found</h3>
+            <p>Users will appear here once seeded in the database.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="close()"
+        id="btn-switcher-close"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</dialog>

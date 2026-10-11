@@ -1,0 +1,148 @@
+.group-dialog {
+  padding: 0;
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background-color: var(--sf);
+  color: var(--tx);
+  max-width: 620px;
+  width: 90vw;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+
+  &::backdrop {
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+  }
+}
+
+.modal-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tx);
+}
+
+.modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--mu);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--mu);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: var(--sf2);
+    color: var(--tx);
+  }
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.roles-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.roles-list {
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background-color: var(--bg);
+  padding: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: var(--sf);
+  border: 1px solid var(--bd);
+
+  &:hover {
+    background-color: var(--sf2);
+  }
+}
+
+.role-info {
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    font-size: 13px;
+    color: var(--tx);
+  }
+
+  small {
+    font-size: 11px;
+    color: var(--mu);
+  }
+}
+
+.empty-roles {
+  padding: 16px;
+  text-align: center;
+  color: var(--mu);
+  font-size: 13px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  border-top: 1px solid var(--bd);
+  padding-top: 14px;
+}

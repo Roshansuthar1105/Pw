@@ -1,0 +1,163 @@
+<div class="page-container">
+  <!-- Toast -->
+  @if (toastMessage()) {
+    <div class="toast is-visible" role="status" aria-live="polite">
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+    <span class="sep">›</span>
+    <span>Access Control</span>
+    <span class="sep">›</span>
+    <span aria-current="page">Role Builder</span>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Role Builder</h1>
+      <p class="page-subtitle">
+        Create and configure reusable permission bundles with the interactive component checkbox tree.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn"
+        (click)="openCreateModal()"
+        id="btn-create-role"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" x2="12" y1="5" y2="19"/>
+          <line x1="5" x2="19" y1="12" y2="12"/>
+        </svg>
+        Create Role
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <section class="kpi-grid" aria-label="Role Metrics">
+    <div class="card kpi">
+      <span class="label">Total Roles</span>
+      <span class="value">{{ totalRoles() }}</span>
+      <span class="delta">Available</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Custom Roles</span>
+      <span class="value">{{ customRoles() }}</span>
+      <span class="delta">Admin-defined</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">System Roles</span>
+      <span class="value">{{ systemRoles() }}</span>
+      <span class="delta">Protected</span>
+    </div>
+  </section>
+
+  <!-- Roles Table -->
+  <section class="card table-card" aria-label="Roles List">
+    <div class="card-header-bar">
+      <h2>Defined Roles</h2>
+      <span class="count-badge">{{ roles().length }} roles</span>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        <div class="skeleton" style="height: 48px;"></div>
+        <div class="skeleton" style="height: 48px;"></div>
+      </div>
+    } @else if (roles().length === 0) {
+      <div class="empty">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <h3>No roles found</h3>
+        <p>Create your first permission role using the button above.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Role Name</th>
+              <th>Role Code</th>
+              <th>Description</th>
+              <th class="num">Components</th>
+              <th>Kind</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of roles(); track role.id) {
+              <tr>
+                <td>
+                  <strong>{{ role.name }}</strong>
+                </td>
+                <td>
+                  <code class="code-badge">{{ role.code }}</code>
+                </td>
+                <td class="desc-cell">{{ role.description || '—' }}</td>
+                <td class="num">
+                  <span class="badge badge--neutral">{{ role.componentCount || 0 }}</span>
+                </td>
+                <td>
+                  @if (role.isSystem) {
+                    <span class="badge badge--ok">System</span>
+                  } @else {
+                    <span class="badge badge--neutral">Custom</span>
+                  }
+                </td>
+                <td style="text-align: right;">
+                  <button
+                    type="button"
+                    class="btn btn--outline btn-sm"
+                    (click)="openEditModal(role)"
+                  >
+                    Edit Permissions
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn-sm"
+                    [disabled]="role.isSystem"
+                    (click)="confirmDelete(role)"
+                    style="margin-left: 6px;"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Modals -->
+  <app-role-modal
+    #roleModal
+    (saved)="onRoleSaved()"
+  />
+
+  <app-confirm-modal
+    #confirmModal
+    title="Delete Role"
+    [message]="'Are you sure you want to delete role \'' + (pendingDelete()?.name || '') + '\'?'"
+    confirmText="Delete Role"
+    (confirmed)="executeDelete()"
+  />
+</div>

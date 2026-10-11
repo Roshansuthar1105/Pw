@@ -1,0 +1,116 @@
+<div class="page-container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+    <span class="sep">›</span>
+    <span>Access Control</span>
+    <span class="sep">›</span>
+    <span aria-current="page">Audit Logs</span>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Audit Log Trail</h1>
+      <p class="page-subtitle">
+        Chronological audit history of component definitions, role bindings, and user alterations.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="loadLogs()"
+        [disabled]="isLoading()"
+        id="btn-refresh-logs"
+      >
+        Refresh Logs
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <section class="kpi-grid" aria-label="Audit Metrics">
+    <div class="card kpi">
+      <span class="label">Total Recorded Logs</span>
+      <span class="value">{{ totalLogs() }}</span>
+      <span class="delta">Audited Events</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Security Integrity</span>
+      <span class="value">Active</span>
+      <span class="delta">Auto-persisted</span>
+    </div>
+  </section>
+
+  <!-- Table -->
+  <section class="card table-card" aria-label="Audit Log Entries">
+    <div class="card-header-bar">
+      <h2>Recent Audit Events</h2>
+      <span class="count-badge">{{ logs().length }} events</span>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        <div class="skeleton" style="height: 48px;"></div>
+        <div class="skeleton" style="height: 48px;"></div>
+      </div>
+    } @else if (logs().length === 0) {
+      <div class="empty">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" x2="12" y1="8" y2="12"/>
+          <line x1="12" x2="12.01" y1="16" y2="16"/>
+        </svg>
+        <h3>No audit entries recorded</h3>
+        <p>Administrative mutations will be automatically logged here.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Entity Type</th>
+              <th>Target Entity</th>
+              <th>Details / Diff</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs(); track log.id) {
+              <tr>
+                <td class="time-cell">{{ log.createdAt | date:'short' }}</td>
+                <td>
+                  <strong class="actor-badge">{{ log.actorUsername || 'system' }}</strong>
+                </td>
+                <td>
+                  <span [class]="getActionBadgeClass(log.action)">
+                    {{ log.action }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge--neutral">{{ log.entityType }}</span>
+                </td>
+                <td>
+                  <strong>{{ log.entityName || ('#' + log.entityId) }}</strong>
+                </td>
+                <td class="details-cell">
+                  <code>{{ log.details || '—' }}</code>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

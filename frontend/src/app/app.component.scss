@@ -4,3 +4,30 @@
   min-width: 0;
   min-height: 100vh;
 }
+
+.user-card {
+  cursor: pointer;
+  border-radius: var(--r-ctl);
+  padding: 8px;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--sba);
+  }
+
+  .user-info-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.menu-group-trigger {
+  cursor: pointer;
+  width: 100%;
+}

@@ -1,0 +1,242 @@
+<div class="page-container">
+  <!-- Toast Feedback -->
+  @if (toastMessage()) {
+    <div class="toast is-visible" role="status" aria-live="polite">
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+    <span class="sep">›</span>
+    <span>Access Control</span>
+    <span class="sep">›</span>
+    <span aria-current="page">Component Manager</span>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Component Manager</h1>
+      <p class="page-subtitle">
+        Register and organize menus, pages (submenus), and granular UI functionalities in a 3-tier hierarchy.
+      </p>
+    </div>
+    <div class="header-actions">
+      @if (components().length === 0) {
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="bootstrapDefaults()"
+          [disabled]="isLoading()"
+          id="btn-bootstrap-components"
+        >
+          Initialize Default Components
+        </button>
+      }
+      <button
+        type="button"
+        class="btn"
+        (click)="openCreateModal('MENU')"
+        id="btn-register-component"
+      >
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" x2="12" y1="5" y2="19"/>
+          <line x1="5" x2="19" y1="12" y2="12"/>
+        </svg>
+        Register Component
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <section class="kpi-grid" aria-label="Component Metrics">
+    <div class="card kpi">
+      <span class="label">Total Components</span>
+      <span class="value">{{ totalCount() }}</span>
+      <span class="delta">Configured</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Sidebar Menus</span>
+      <span class="value">{{ menuCount() }}</span>
+      <span class="delta">Level 1</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">Pages / Submenus</span>
+      <span class="value">{{ submenuCount() }}</span>
+      <span class="delta">Level 2</span>
+    </div>
+    <div class="card kpi">
+      <span class="label">UI Functionalities</span>
+      <span class="value">{{ funcCount() }}</span>
+      <span class="delta">Level 3</span>
+    </div>
+  </section>
+
+  <!-- Main Content: Hierarchy Visualizer -->
+  <section class="hierarchy-section" aria-label="Component Hierarchy">
+    <div class="section-top">
+      <h2>3-Level Component Hierarchy</h2>
+      <p class="section-desc">Strict rules: MENU &gt; SUBMENU &gt; FUNCTIONALITY. No skipping levels.</p>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        <div class="skeleton" style="height: 100px;"></div>
+        <div class="skeleton" style="height: 100px;"></div>
+      </div>
+    } @else if (hierarchy().length === 0) {
+      <div class="card empty">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M3 9h18"/>
+          <path d="M9 21V9"/>
+        </svg>
+        <h3>No components registered</h3>
+        <p>Start by creating a top-level MENU, or click "Initialize Default Components" to load the Medhaa suite.</p>
+        <button type="button" class="btn" (click)="bootstrapDefaults()">
+          Initialize Default Components
+        </button>
+      </div>
+    } @else {
+      <div class="menu-cards">
+        @for (item of hierarchy(); track item.menu.id) {
+          <div class="card menu-card">
+            <!-- Level 1: Menu Header -->
+            <div class="menu-card-header">
+              <div class="menu-title-group">
+                <span class="badge badge--neutral">MENU</span>
+                <strong class="menu-name">{{ item.menu.name }}</strong>
+                <code class="code-badge">{{ item.menu.code }}</code>
+                <span class="meta-tag">Order: {{ item.menu.sortOrder }}</span>
+              </div>
+              <div class="menu-actions">
+                <button
+                  type="button"
+                  class="btn btn--outline btn-sm"
+                  (click)="openCreateModal('SUBMENU', item.menu.id)"
+                  title="Add Submenu to this Menu"
+                >
+                  + Add Page
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--outline btn-sm"
+                  (click)="openEditModal(item.menu)"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--danger btn-sm"
+                  (click)="confirmDelete(item.menu)"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <!-- Level 2: Submenus -->
+            <div class="submenus-container">
+              @for (sub of item.submenus; track sub.submenu.id) {
+                <div class="submenu-row">
+                  <div class="submenu-header">
+                    <div class="submenu-title-group">
+                      <span class="badge badge--ok">SUBMENU</span>
+                      <strong class="submenu-name">{{ sub.submenu.name }}</strong>
+                      <code class="code-badge">{{ sub.submenu.code }}</code>
+                      <span class="route-tag">{{ sub.submenu.route }}</span>
+                      @if (sub.submenu.helpText) {
+                        <small class="help-tag">{{ sub.submenu.helpText }}</small>
+                      }
+                    </div>
+                    <div class="submenu-actions">
+                      <button
+                        type="button"
+                        class="btn btn--outline btn-sm"
+                        (click)="openCreateModal('FUNCTIONALITY', sub.submenu.id)"
+                        title="Add Functionality to this Submenu"
+                      >
+                        + Add Action
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--outline btn-sm"
+                        (click)="openEditModal(sub.submenu)"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--danger btn-sm"
+                        (click)="confirmDelete(sub.submenu)"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Level 3: Functionalities -->
+                  <div class="functionalities-area">
+                    <span class="func-area-label">Functionalities:</span>
+                    <div class="func-chips">
+                      @for (fn of sub.functionalities; track fn.id) {
+                        <div class="func-chip">
+                          <span class="badge badge--warn">{{ fn.elementType }}</span>
+                          <span class="func-name">{{ fn.name }}</span>
+                          <code class="func-code">{{ fn.code }}</code>
+                          <button
+                            type="button"
+                            class="chip-action-btn"
+                            (click)="openEditModal(fn)"
+                            title="Edit Functionality"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            class="chip-action-btn chip-danger"
+                            (click)="confirmDelete(fn)"
+                            title="Delete Functionality"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      } @empty {
+                        <span class="empty-func">No granular functionalities registered for this page.</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-subs">No submenus under this menu yet. Click "+ Add Page" above.</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Modals -->
+  <app-component-modal
+    #compModal
+    (saved)="onComponentSaved()"
+  />
+
+  <app-confirm-modal
+    #confirmModal
+    title="Delete Component"
+    [message]="'Are you sure you want to delete component \'' + (pendingDelete()?.name || '') + '\'? Descendant items will also be removed.'"
+    confirmText="Delete Component"
+    (confirmed)="executeDelete()"
+  />
+</div>
