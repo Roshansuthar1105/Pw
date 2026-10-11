@@ -4,9 +4,13 @@ import {
   ViewChild,
   input,
   output,
-  signal
+  signal,
+  inject,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 
 @Component({
   selector: 'app-confirm-modal',
@@ -15,7 +19,9 @@ import { CommonModule } from '@angular/common';
   templateUrl: './confirm-modal.component.html',
   styleUrl: './confirm-modal.component.scss'
 })
-export class ConfirmModalComponent {
+export class ConfirmModalComponent implements OnDestroy {
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
   @ViewChild('dialog') dialog?: ElementRef<HTMLDialogElement>;
 
   readonly title = input<string>('Confirm Action');
@@ -32,6 +38,9 @@ export class ConfirmModalComponent {
 
   open(): void {
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('confirm-modal', () => this.cancel());
+    }
     setTimeout(() => {
       if (this.dialog?.nativeElement && !this.dialog.nativeElement.open) {
         this.dialog.nativeElement.showModal?.();
@@ -40,10 +49,26 @@ export class ConfirmModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.dialog?.nativeElement?.open) {
       this.dialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.cancel();
+    }
   }
 
   confirm(): void {

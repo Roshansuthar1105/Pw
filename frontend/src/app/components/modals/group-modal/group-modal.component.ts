@@ -4,12 +4,15 @@ import {
   ViewChild,
   inject,
   signal,
-  output
+  output,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RbacApiService } from '../../../services/rbac-api.service';
 import { I18nService } from '../../../services/i18n.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 import { Group, Role } from '../../../models/rbac.model';
 
 @Component({
@@ -19,11 +22,13 @@ import { Group, Role } from '../../../models/rbac.model';
   templateUrl: './group-modal.component.html',
   styleUrl: './group-modal.component.scss'
 })
-export class GroupModalComponent {
+export class GroupModalComponent implements OnDestroy {
   @ViewChild('modalDialog') dialog?: ElementRef<HTMLDialogElement>;
 
   private rbacApi = inject(RbacApiService);
   readonly i18n = inject(I18nService);
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   readonly isOpen = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
@@ -62,6 +67,9 @@ export class GroupModalComponent {
     }
 
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('group-modal', () => this.close());
+    }
     setTimeout(() => {
       if (this.dialog?.nativeElement && !this.dialog.nativeElement.open) {
         this.dialog.nativeElement.showModal?.();
@@ -70,10 +78,26 @@ export class GroupModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.dialog?.nativeElement?.open) {
       this.dialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   toggleRole(roleId: number): void {
