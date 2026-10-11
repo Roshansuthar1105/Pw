@@ -1,0 +1,66 @@
+/* ==========================================================================
+   Medhaa — Global Styles
+   Imports Tailwind v4 + Clarity design tokens
+   ========================================================================== */
+
+/* Tailwind v4 base import */
+@import "tailwindcss";
+
+/* Design system tokens (CSS custom properties) */
+@import "./design-system/tokens.css";
+
+/* ==========================================================================
+   Tailwind v4 Theme Extensions (@theme)
+   Maps Clarity tokens → Tailwind utility classes
+   e.g., bg-primary, text-muted, border-line, rounded-card
+   ========================================================================== */
+@theme {
+  /* Colours */
+  --color-primary: var(--pri);
+  --color-on-primary: var(--pt);
+  --color-canvas: var(--bg);
+  --color-surface: var(--sf);
+  --color-surface-2: var(--sf2);
+  --color-line: var(--bd);
+  --color-ink: var(--tx);
+  --color-muted: var(--mu);
+  --color-success: var(--ok);
+  --color-warning: var(--wn);
+  --color-danger: var(--bad);
+  --color-review: var(--review);
+  --color-sidebar: var(--sb);
+  --color-sidebar-text: var(--sbt);
+  --color-sidebar-muted: var(--sbm);
+  --color-sidebar-active: var(--sbac);
+  --color-sidebar-line: var(--sbd);
+
+  /* Typography */
+  --font-sans: 'Inter', 'Noto Sans Devanagari', system-ui, sans-serif;
+
+  /* Font sizes */
+  --text-base: 14px;
+  --text-caption: 12px;
+  --text-h3: 15px;
+  --text-h2: 20px;
+  --text-h1: 26px;
+  --text-kpi: 26px;
+
+  /* Border radius */
+  --radius-card: 12px;
+  --radius-ctl: 10px;
+  --radius-item: 9px;
+  --radius-dialog: 16px;
+
+  /* Shadows */
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, .14);
+
+  /* Spacing */
+  --spacing-sidebar: 264px;
+  --spacing-rail: 74px;
+
+  /* Max width */
+  --max-width-page: 1180px;
+
+  /* Transitions */
+  --transition-duration-default: 200ms;
+}
