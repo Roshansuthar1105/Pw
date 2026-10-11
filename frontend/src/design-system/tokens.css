@@ -93,17 +93,20 @@ table { font-variant-numeric: tabular-nums; }
 .menu-item {
   display: flex; align-items: center; gap: 11px; width: 100%; background: none; border: 0;
   padding: 9px 10px; border-radius: var(--r-item); color: var(--sbt); font-weight: 500; text-align: left; text-decoration: none;
+  margin-bottom: 3px;
 }
+.menu-group { margin-bottom: 3px; }
 .menu-item:hover { background: var(--sba); }
 .menu-item[aria-current='page'], .menu-item.is-active { background: var(--sba); color: var(--sbac); font-weight: 600; }
+.menu-item[aria-current='page'] svg, .menu-item.is-active svg { color: var(--sbac); }
 .menu-item .label { flex: 1; }
 .menu-item .chevron, .menu-item .chevron-icon { width: 15px; height: 15px; color: var(--sbm); transition: transform .2s; margin-left: auto; }
 .menu-group.is-open > .menu-item .chevron, .menu-group.is-open > .menu-item .chevron-icon { transform: rotate(180deg); }
-.submenu { display: none; margin: 2px 0 6px 18px; padding-left: 10px; border-left: 1px solid var(--sbd); }
-.menu-group.is-open > .submenu { display: block; }
-.submenu .menu-item { padding: 7px 10px; font-weight: 400; font-size: 13.5px; color: var(--sbm); }
+.submenu { display: none; margin: 3px 0 6px 18px; padding-left: 10px; border-left: 1px solid var(--sbd); }
+.menu-group.is-open > .submenu { display: flex; flex-direction: column; gap: 3px; }
+.submenu .menu-item { padding: 7px 10px; font-weight: 400; font-size: 13.5px; color: var(--sbm); margin-bottom: 0; }
 .submenu .menu-item:hover { color: var(--sbt); }
-.submenu .menu-item[aria-current='page'] { color: var(--sbac); font-weight: 600; }
+.submenu .menu-item[aria-current='page'], .submenu .menu-item.is-active { color: var(--sbac); font-weight: 600; background: var(--sba); }
 .user-card { margin-top: auto; border-top: 1px solid var(--sbd); padding-top: 12px; display: flex; align-items: center; gap: 10px; }
 .user-card small { display: block; color: var(--sbm); font-size: 12px; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--pri); color: var(--pt); display: grid; place-items: center; font-weight: 700; flex: none; }
@@ -173,7 +176,9 @@ table { font-variant-numeric: tabular-nums; }
   }
   .app.collapsed .sidebar:hover .menu-group.is-open > .submenu,
   .app.collapsed .sidebar.is-hover-expanded .menu-group.is-open > .submenu {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
   }
 }
 
