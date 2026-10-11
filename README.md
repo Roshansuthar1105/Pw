@@ -43,7 +43,12 @@ angular-springboot-template/
 │               ├── application.properties         # Base config
 │               ├── application-dev.properties     # Dev profile
 │               └── application-prod.properties    # Prod profile
-└── frontend/                       # Angular app (create with `ng new`)
+├── db/                             # Database migrations (Flyway)
+│   ├── migration/
+│   │   └── V1__create_items_table.sql
+│   └── README.md
+├── frontend/                       # Angular app
+└── CHANGELOG.md                    # Project changelog for all devs
 ```
 
 ---
@@ -165,8 +170,8 @@ All endpoints return a consistent JSON envelope:
 
 | Profile | Description |
 |---------|-------------|
-| `dev` | Local PostgreSQL, verbose SQL logging, DDL auto create-drop |
-| `prod` | Env-var secrets, tuned HikariCP, DDL none, minimal logging |
+| `dev` | Local PostgreSQL, verbose SQL logging, Flyway migrations, Hibernate validate |
+| `prod` | Env-var secrets, tuned HikariCP, Flyway migrations (clean disabled), minimal logging |
 
 Switch profiles:
 ```bash
