@@ -8,10 +8,12 @@ import {
   model,
   output,
   OnDestroy,
-  Type
+  Type,
+  HostListener
 } from '@angular/core';
 import { CommonModule, NgComponentOutlet } from '@angular/common';
 import { I18nService } from '../../../services/i18n.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 
 export type ModalPresetSize = 'xs' | 's' | 'sm' | 'm' | 'md' | 'l' | 'lg' | 'xl' | 'full';
 export type ModalSize = ModalPresetSize | string;
@@ -100,9 +102,19 @@ export class ModalComponent {
   });
 
   private isDestroyed = false;
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   open(): void {
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register(this.headingId, () => {
+        if (this.closeOnEscape()) {
+          this.close();
+        }
+      });
+    }
+
     const show = () => {
       if (this.isDestroyed) return;
       const dlg = this.dialogElement?.nativeElement;
@@ -120,6 +132,9 @@ export class ModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+
     const dlg = this.dialogElement?.nativeElement;
     if (dlg?.open) {
       dlg.close?.();
@@ -131,7 +146,18 @@ export class ModalComponent {
   }
 
   ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     this.isDestroyed = true;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen() && this.closeOnEscape()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   onDialogCancel(event: Event): void {

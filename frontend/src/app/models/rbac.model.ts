@@ -12,6 +12,7 @@ export interface User {
   groupIds: number[];
   groupNames: string[];
   createdAt: string;
+  avatarUrl?: string;
 }
 
 export interface Group {

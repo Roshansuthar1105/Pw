@@ -3,10 +3,13 @@ import {
   ElementRef,
   ViewChild,
   inject,
-  signal
+  signal,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RbacApiService } from '../../../services/rbac-api.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 import { Group, User } from '../../../models/rbac.model';
 
 @Component({
@@ -16,10 +19,12 @@ import { Group, User } from '../../../models/rbac.model';
   templateUrl: './group-members-modal.component.html',
   styleUrl: './group-members-modal.component.scss'
 })
-export class GroupMembersModalComponent {
+export class GroupMembersModalComponent implements OnDestroy {
   @ViewChild('modalDialog') dialog?: ElementRef<HTMLDialogElement>;
 
   private rbacApi = inject(RbacApiService);
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   readonly isOpen = signal<boolean>(false);
   readonly isLoading = signal<boolean>(false);
@@ -32,6 +37,9 @@ export class GroupMembersModalComponent {
     this.isLoading.set(true);
 
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('group-members-modal', () => this.close());
+    }
     setTimeout(() => {
       if (this.dialog?.nativeElement && !this.dialog.nativeElement.open) {
         this.dialog.nativeElement.showModal?.();
@@ -50,10 +58,26 @@ export class GroupMembersModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.dialog?.nativeElement?.open) {
       this.dialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   onDialogCancel(event: Event): void {

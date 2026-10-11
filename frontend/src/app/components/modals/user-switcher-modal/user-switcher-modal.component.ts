@@ -4,12 +4,15 @@ import {
   ViewChild,
   inject,
   signal,
-  output
+  output,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionService } from '../../../services/permission.service';
 import { I18nService } from '../../../services/i18n.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 import { User } from '../../../models/rbac.model';
 
 @Component({
@@ -19,12 +22,14 @@ import { User } from '../../../models/rbac.model';
   templateUrl: './user-switcher-modal.component.html',
   styleUrl: './user-switcher-modal.component.scss'
 })
-export class UserSwitcherModalComponent {
+export class UserSwitcherModalComponent implements OnDestroy {
   @ViewChild('switcherDialog') dialog?: ElementRef<HTMLDialogElement>;
 
   readonly auth = inject(AuthService);
   readonly permissions = inject(PermissionService);
   readonly i18n = inject(I18nService);
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   readonly isOpen = signal<boolean>(false);
   readonly isLoading = signal<boolean>(false);
@@ -33,6 +38,9 @@ export class UserSwitcherModalComponent {
 
   open(): void {
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('user-switcher-modal', () => this.close());
+    }
     this.loadUsers();
     setTimeout(() => {
       if (this.dialog?.nativeElement && !this.dialog.nativeElement.open) {
@@ -42,10 +50,26 @@ export class UserSwitcherModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.dialog?.nativeElement?.open) {
       this.dialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   loadUsers(): void {

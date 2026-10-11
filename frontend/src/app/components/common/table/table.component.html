@@ -1,0 +1,261 @@
+<div class="common-table-container" [class.is-bordered]="bordered()">
+  <!-- Toolbar Header -->
+  <header class="table-toolbar">
+    <div class="toolbar-left">
+      <!-- Title & Subtitle if provided -->
+      @if (tableName()) {
+        <div class="table-title-group">
+          <h3 class="table-title">{{ tableName() }}</h3>
+          @if (tableSubtitle()) {
+            <p class="table-subtitle">{{ tableSubtitle() }}</p>
+          }
+        </div>
+      }
+
+      <!-- Entries per page selector -->
+      <div class="entries-selector">
+        <label [for]="'select-entries-' + tableName()" class="entries-label">
+          {{ i18n.t('tbl_show') }}
+        </label>
+        <select
+          [id]="'select-entries-' + tableName()"
+          class="input entries-select"
+          [ngModel]="activePageSize()"
+          (ngModelChange)="onPageSizeChange($event)"
+        >
+          @for (opt of pageSizeOptions(); track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+        <span class="entries-label-suffix">{{ i18n.t('tbl_entries') }}</span>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Search input -->
+      @if (searchable()) {
+        <div class="table-search">
+          <svg class="i search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            type="search"
+            class="input search-input"
+            [placeholder]="searchPlaceholder() || i18n.t('tbl_search')"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            [attr.aria-label]="searchPlaceholder() || i18n.t('tbl_search')"
+          />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              class="clear-search-btn"
+              (click)="clearSearch()"
+              aria-label="Clear search"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          }
+        </div>
+      }
+
+      <!-- CSV Export Button -->
+      @if (exportable()) {
+        <button
+          type="button"
+          class="btn btn--outline btn-export"
+          (click)="exportToCsv()"
+          [disabled]="loading() || filteredData().length === 0"
+          title="Export table data to CSV file"
+        >
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+          <span>{{ exportBtnLabel() || i18n.t('tbl_export') }}</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Table Body / Wrap -->
+  <div class="table-wrap">
+    <table class="common-table" [class.is-striped]="striped()">
+      <thead>
+        <tr>
+          <!-- Sequential Number Column -->
+          @if (showIndex()) {
+            <th class="num index-col-header" style="width: 70px;">
+              {{ indexLabel() || i18n.t('tbl_sno') }}
+            </th>
+          }
+
+          <!-- Dynamic Columns Headers -->
+          @for (col of columns(); track col.key) {
+            <th
+              [class]="col.align === 'num' || col.align === 'right' ? 'num' : (col.align === 'center' ? 'align-center' : '')"
+              [class.is-sortable]="col.sortable !== false"
+              [style]="resolveColumnHeaderStyle(col)"
+              (click)="toggleSort(col)"
+            >
+              <div class="th-content">
+                <span>{{ col.label }}</span>
+                @if (col.sortable !== false) {
+                  <span class="sort-indicator" aria-hidden="true">
+                    @if (isColumnSorted(col)) {
+                      @if (sortDirection() === 'asc') {
+                        ▲
+                      } @else if (sortDirection() === 'desc') {
+                        ▼
+                      }
+                    } @else {
+                      <span class="sort-neutral">↕</span>
+                    }
+                  </span>
+                }
+              </div>
+            </th>
+          }
+
+          <!-- Action Column Header -->
+          @if (actions().length > 0) {
+            <th class="num actions-col-header">
+              {{ actionHeaderLabel() || i18n.t('tbl_actions') }}
+            </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        <!-- Loading State -->
+        @if (loading()) {
+          @for (s of [1, 2, 3, 4, 5]; track s) {
+            <tr class="skeleton-row">
+              @if (showIndex()) {
+                <td class="num"><div class="skeleton" style="width: 30px; height: 16px;"></div></td>
+              }
+              @for (col of columns(); track col.key) {
+                <td><div class="skeleton" style="height: 16px; width: 80%;"></div></td>
+              }
+              @if (actions().length > 0) {
+                <td class="num"><div class="skeleton" style="height: 28px; width: 70px; margin-left: auto;"></div></td>
+              }
+            </tr>
+          }
+        } @else if (paginatedData().length === 0) {
+          <!-- Empty State -->
+          <tr class="empty-row">
+            <td [attr.colspan]="columns().length + (showIndex() ? 1 : 0) + (actions().length > 0 ? 1 : 0)">
+              <div class="empty">
+                <svg class="i empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect width="18" height="18" x="3" y="3" rx="2"/>
+                  <path d="M3 9h18"/>
+                  <path d="M9 21V9"/>
+                </svg>
+                <h3>{{ emptyTitle() || i18n.t('tbl_no_records') }}</h3>
+                <p>{{ emptyMessage() || i18n.t('tbl_no_records_desc') }}</p>
+                @if (searchQuery()) {
+                  <button type="button" class="btn btn--outline" (click)="clearSearch()" style="margin-top: 10px;">
+                    {{ i18n.t('tbl_clear_search') }}
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @else {
+          <!-- Data Rows -->
+          @for (row of paginatedData(); track $index; let idx = $index) {
+            <tr class="table-data-row" (click)="onRowClick(row)">
+              <!-- S.No. Index Cell -->
+              @if (showIndex()) {
+                <td class="num font-mono index-cell">
+                  #{{ startIndex() + idx }}
+                </td>
+              }
+
+              <!-- Dynamic Data Cells -->
+              @for (col of columns(); track col.key) {
+                <td
+                  [class]="resolveColumnCellClass(col, row)"
+                  [style]="resolveColumnCellStyle(col, row)"
+                >
+                  <!-- Badge Support -->
+                  @if (getBadge(row, col); as b) {
+                    <span [class]="'badge badge--' + (b.variant || 'neutral')">
+                      {{ b.text }}
+                    </span>
+                  } @else {
+                    <span>{{ getFormattedValue(row, col) }}</span>
+                  }
+                </td>
+              }
+
+              <!-- Action Buttons Cell -->
+              @if (actions().length > 0) {
+                <td class="num actions-cell" (click)="$event.stopPropagation()">
+                  <div class="actions-group">
+                    @for (act of actions(); track act.id) {
+                      @if (act.visible ? act.visible(row) : true) {
+                        <button
+                          type="button"
+                          [class]="act.variant === 'danger' ? 'btn btn--outline btn--danger btn-sm' : (act.variant === 'primary' ? 'btn btn-sm' : 'btn btn--outline btn-sm')"
+                          [disabled]="act.disabled ? act.disabled(row) : false"
+                          [attr.title]="act.title || act.label"
+                          (click)="act.onClick(row, startIndex() + idx - 1)"
+                        >
+                          {{ act.label }}
+                        </button>
+                      }
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Footer -->
+  <footer class="table-pagination-bar">
+    <div class="pagination-info">
+      {{ i18n.t('tbl_showing') }} <strong>{{ startIndex() }}</strong> {{ i18n.t('tbl_to') }} <strong>{{ endIndex() }}</strong> {{ i18n.t('tbl_of') }} <strong>{{ totalCount() }}</strong> {{ i18n.t('tbl_entries') }}
+      @if (searchQuery()) {
+        <span class="filtered-total">({{ i18n.t('tbl_filtered_from') }} {{ rawTotalCount() }})</span>
+      }
+    </div>
+
+    <!-- Pagination Controls -->
+    @if (totalPages() > 1) {
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="btn btn--outline btn-sm"
+          [disabled]="currentPage() === 1"
+          (click)="goToPage(currentPage() - 1)"
+          aria-label="Previous Page"
+        >
+          {{ i18n.t('tbl_prev') }}
+        </button>
+
+        <span class="pagination-page-indicator">
+          {{ i18n.t('tbl_page') }} <strong>{{ currentPage() }}</strong> {{ i18n.t('tbl_of') }} <strong>{{ totalPages() }}</strong>
+        </span>
+
+        <button
+          type="button"
+          class="btn btn--outline btn-sm"
+          [disabled]="currentPage() === totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          aria-label="Next Page"
+        >
+          {{ i18n.t('tbl_next') }}
+        </button>
+      </div>
+    }
+  </footer>
+</div>

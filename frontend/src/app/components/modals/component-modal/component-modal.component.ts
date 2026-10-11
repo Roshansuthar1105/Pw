@@ -5,12 +5,15 @@ import {
   inject,
   signal,
   output,
-  computed
+  computed,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RbacApiService } from '../../../services/rbac-api.service';
 import { I18nService } from '../../../services/i18n.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 import { ComponentItem, ComponentLevel } from '../../../models/rbac.model';
 
 @Component({
@@ -20,11 +23,13 @@ import { ComponentItem, ComponentLevel } from '../../../models/rbac.model';
   templateUrl: './component-modal.component.html',
   styleUrl: './component-modal.component.scss'
 })
-export class ComponentModalComponent {
+export class ComponentModalComponent implements OnDestroy {
   @ViewChild('modalDialog') dialog?: ElementRef<HTMLDialogElement>;
 
   private rbacApi = inject(RbacApiService);
   readonly i18n = inject(I18nService);
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   readonly isOpen = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
@@ -101,6 +106,9 @@ export class ComponentModalComponent {
     }
 
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('component-modal', () => this.close());
+    }
     setTimeout(() => {
       if (this.dialog?.nativeElement && !this.dialog.nativeElement.open) {
         this.dialog.nativeElement.showModal?.();
@@ -109,10 +117,26 @@ export class ComponentModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.dialog?.nativeElement?.open) {
       this.dialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   onLevelChange(newLevel: ComponentLevel): void {

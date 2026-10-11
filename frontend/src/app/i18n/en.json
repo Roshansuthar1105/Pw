@@ -10,6 +10,9 @@
   "role_admin": "Admin",
   "user_name": "Medhaa Administrator",
   "status_online": "Online",
+  "portal_enterprise": "Enterprise Portal",
+  "role_super_admin": "Super Admin",
+  "user_profile_aria": "User account menu",
 
   "breadcrumb_dashboard": "Home › Dashboard",
   "dash_title": "Platform Overview",
@@ -146,5 +149,21 @@
   "comp_view_table": "Tabular View",
   "comp_view_hierarchy": "Hierarchy Cards",
   "comp_btn_register": "Register Component",
-  "comp_reset_filters": "Reset"
+  "comp_reset_filters": "Reset",
+  "tbl_show": "Show",
+  "tbl_entries": "entries",
+  "tbl_search": "Search records...",
+  "tbl_export": "Export CSV",
+  "tbl_sno": "S.No.",
+  "tbl_actions": "Actions",
+  "tbl_showing": "Showing",
+  "tbl_to": "to",
+  "tbl_of": "of",
+  "tbl_filtered_from": "filtered from",
+  "tbl_page": "Page",
+  "tbl_prev": "Previous",
+  "tbl_next": "Next",
+  "tbl_no_records": "No records found",
+  "tbl_no_records_desc": "There are no matching entries to display at this time.",
+  "tbl_clear_search": "Clear Search Filter"
 }

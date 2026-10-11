@@ -8,7 +8,14 @@
     <a href="#main-content" class="skip-link">{{ i18n.dict().skip_link }}</a>
 
     <!-- Sidebar Navigation -->
-    <aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
+    <aside
+      class="sidebar"
+      id="app-sidebar"
+      aria-label="Main Navigation"
+      [class.is-hover-expanded]="isCollapsed() && isSidebarHovered()"
+      (mouseenter)="onSidebarMouseEnter()"
+      (mouseleave)="onSidebarMouseLeave()"
+    >
       <!-- Brand -->
       <div class="brand">
         <svg class="i" style="width: 28px; height: 28px;" viewBox="0 0 24 24" aria-hidden="true">
@@ -20,8 +27,8 @@
       <!-- Active Session Status Badge -->
       <div class="course-switch">
         <div>
-          <strong>Medhaa Platform</strong>
-          <small>{{ auth.currentUser()?.username || 'Guest' }} · {{ auth.userType() || 'STUDENT' }}</small>
+          <strong>{{ i18n.dict().brand_name }} Platform</strong>
+          <small>{{ i18n.dict().portal_enterprise }}</small>
         </div>
         <span class="badge badge--ok">{{ i18n.dict().status_online }}</span>
       </div>
@@ -72,12 +79,13 @@
               class="menu-item menu-group-trigger"
               (click)="toggleMenu(menu.id)"
               [attr.aria-expanded]="isMenuOpen(menu.id)"
+              [attr.title]="menu.name"
             >
               <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
               <span class="label">{{ menu.name }}</span>
-              <svg class="i chevron-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <svg class="i chevron chevron-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="m6 9 6 6 6-6"/>
               </svg>
             </button>
@@ -155,45 +163,6 @@
         </a>
       }
 
-      <!-- Pinned User Card with Switcher & Logout -->
-      <div class="user-card-container">
-        <div
-          class="user-card"
-          (click)="openUserSwitcher()"
-          role="button"
-          tabindex="0"
-          title="Click to switch active user account"
-          id="btn-user-card"
-        >
-          <div class="avatar" [class.is-super]="auth.isSuperAdmin()" aria-hidden="true">
-            {{ auth.currentUser()?.username ? auth.currentUser()!.username.charAt(0).toUpperCase() : 'U' }}
-          </div>
-          <div class="user-info-text">
-            <div class="user-title-row">
-              <strong>{{ auth.currentUser()?.username || 'Guest' }}</strong>
-              @if (auth.isSuperAdmin()) {
-                <span class="badge badge--ok" style="font-size: 10px; padding: 1px 5px;">Super</span>
-              }
-            </div>
-            <small>{{ auth.userType() || 'STUDENT' }} · Switch ⇄</small>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="btn-logout-sidebar"
-          (click)="logout()"
-          title="Sign out of platform"
-          id="btn-sidebar-logout"
-        >
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" x2="9" y1="12" y2="12"/>
-          </svg>
-          <span>{{ i18n.dict().logout_btn || 'Sign Out' }}</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Mobile Drawer Overlay -->
@@ -233,24 +202,6 @@
 
         <div class="spacer"></div>
 
-        <!-- Dev User Switcher Button in Topbar -->
-        <button
-          type="button"
-          class="btn btn--outline"
-          (click)="openUserSwitcher()"
-          title="Switch user account to test dynamic access control"
-          id="btn-topbar-switch-user"
-          style="display: flex; align-items: center; gap: 6px;"
-        >
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>{{ auth.currentUser()?.username || 'Switch' }} ({{ auth.userType() || 'DEV' }})</span>
-        </button>
-
         <!-- Bilingual Language Toggle -->
         <button
           type="button"
@@ -282,20 +233,99 @@
           }
         </button>
 
-        <!-- Logout Action in Topbar -->
-        <button
-          type="button"
-          class="icon-btn"
-          (click)="logout()"
-          title="Sign Out"
-          id="btn-topbar-logout"
-        >
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" x2="9" y1="12" y2="12"/>
-          </svg>
-        </button>
+        <!-- Topbar User Profile Menu (at far right of navbar) -->
+        <div class="topbar-user-wrap">
+          <button
+            type="button"
+            class="topbar-user-btn"
+            (click)="toggleUserDropdown($event)"
+            [attr.aria-expanded]="isUserDropdownOpen()"
+            aria-haspopup="true"
+            [attr.aria-label]="i18n.dict().user_profile_aria"
+            id="btn-topbar-user-profile"
+          >
+            <!-- User avatar img or first letter of name -->
+            <div class="avatar" [class.is-super]="auth.isSuperAdmin()" aria-hidden="true">
+              @if (auth.currentUser()?.avatarUrl) {
+                <img [src]="auth.currentUser()!.avatarUrl" [alt]="auth.currentUser()?.username || 'User'" class="avatar-img" />
+              } @else {
+                {{ auth.currentUser()?.username ? auth.currentUser()!.username.charAt(0).toUpperCase() : 'U' }}
+              }
+            </div>
+            <div class="topbar-user-meta">
+              <span class="topbar-user-name">{{ auth.currentUser()?.username || 'Guest' }}</span>
+              <span class="topbar-user-role">
+                {{ auth.userType() || 'STUDENT' }}
+                @if (auth.isSuperAdmin()) {
+                  · {{ i18n.dict().role_super_admin }}
+                }
+              </span>
+            </div>
+            <svg class="i chevron-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+
+          <!-- Dropdown Popover -->
+          @if (isUserDropdownOpen()) {
+            <div class="user-dropdown-popover" role="menu" (click)="$event.stopPropagation()">
+              <div class="user-dropdown-header">
+                <div class="avatar avatar--lg" [class.is-super]="auth.isSuperAdmin()" aria-hidden="true">
+                  @if (auth.currentUser()?.avatarUrl) {
+                    <img [src]="auth.currentUser()!.avatarUrl" [alt]="auth.currentUser()?.username || 'User'" class="avatar-img" />
+                  } @else {
+                    {{ auth.currentUser()?.username ? auth.currentUser()!.username.charAt(0).toUpperCase() : 'U' }}
+                  }
+                </div>
+                <div class="user-dropdown-details">
+                  <div class="user-dropdown-title-row">
+                    <strong>{{ auth.currentUser()?.username || 'Guest' }}</strong>
+                    @if (auth.isSuperAdmin()) {
+                      <span class="badge badge--ok" style="font-size: 10px; padding: 1px 6px;">{{ i18n.dict().role_super_admin }}</span>
+                    }
+                  </div>
+                  <small class="user-dropdown-email">{{ auth.currentUser()?.email || 'user@medhaa.io' }}</small>
+                  <div class="user-dropdown-role-pill">
+                    <span class="badge badge--neutral">{{ auth.userType() || 'STUDENT' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="user-dropdown-divider"></div>
+
+              <button
+                type="button"
+                class="user-dropdown-action"
+                (click)="openUserSwitcherFromDropdown()"
+                role="menuitem"
+                id="btn-topbar-switch-user"
+              >
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>{{ i18n.dict().user_switcher_btn || 'Switch User' }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="user-dropdown-action user-dropdown-action--danger"
+                (click)="logoutFromDropdown()"
+                role="menuitem"
+                id="btn-topbar-logout"
+              >
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" x2="9" y1="12" y2="12"/>
+                </svg>
+                <span>{{ i18n.dict().logout_btn || 'Sign Out' }}</span>
+              </button>
+            </div>
+          }
+        </div>
       </header>
 
       <!-- Main Content Routed Views -->

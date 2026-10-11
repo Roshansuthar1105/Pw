@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ViewChild, effect, untracked } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, effect, untracked, HostListener } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from './services/theme.service';
@@ -30,7 +30,9 @@ export class App {
   private router = inject(Router);
 
   readonly isCollapsed = signal<boolean>(false);
+  readonly isSidebarHovered = signal<boolean>(false);
   readonly isDrawerOpen = signal<boolean>(false);
+  readonly isUserDropdownOpen = signal<boolean>(false);
   readonly openMenuIds = signal<Set<number>>(new Set());
   readonly currentUrl = signal<string>(this.router.url);
 
@@ -59,7 +61,56 @@ export class App {
     if (typeof window !== 'undefined' && window.innerWidth <= 900) {
       this.isDrawerOpen.update((open) => !open);
     } else {
-      this.isCollapsed.update((collapsed) => !collapsed);
+      this.isCollapsed.update((collapsed) => {
+        const next = !collapsed;
+        if (!next) {
+          this.isSidebarHovered.set(false);
+        }
+        return next;
+      });
+    }
+  }
+
+  onSidebarMouseEnter(): void {
+    if (this.isCollapsed()) {
+      this.isSidebarHovered.set(true);
+    }
+  }
+
+  onSidebarMouseLeave(): void {
+    this.isSidebarHovered.set(false);
+  }
+
+  toggleUserDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isUserDropdownOpen.update((open) => !open);
+  }
+
+  closeUserDropdown(): void {
+    this.isUserDropdownOpen.set(false);
+  }
+
+  openUserSwitcherFromDropdown(): void {
+    this.closeUserDropdown();
+    this.openUserSwitcher();
+  }
+
+  logoutFromDropdown(): void {
+    this.closeUserDropdown();
+    this.logout();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.isUserDropdownOpen()) {
+      this.closeUserDropdown();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isUserDropdownOpen()) {
+      this.closeUserDropdown();
     }
   }
 

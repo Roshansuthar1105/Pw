@@ -112,4 +112,27 @@ describe('ModalComponent', () => {
     expect(dynEl).toBeTruthy();
     expect(dynEl?.textContent).toContain('Dynamic Page Content');
   });
+
+  it('should lock background scroll when open and unlock when closed', () => {
+    expect(document.body.classList.contains('modal-open')).toBe(false);
+
+    component.open();
+    expect(component.isOpen()).toBe(true);
+    expect(document.body.classList.contains('modal-open')).toBe(true);
+
+    component.close();
+    expect(component.isOpen()).toBe(false);
+    expect(document.body.classList.contains('modal-open')).toBe(false);
+  });
+
+  it('should close when Escape key is pressed', () => {
+    component.open();
+    expect(component.isOpen()).toBe(true);
+
+    const escapeEvt = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    component.onEscapeKey(escapeEvt);
+
+    expect(component.isOpen()).toBe(false);
+    expect(document.body.classList.contains('modal-open')).toBe(false);
+  });
 });

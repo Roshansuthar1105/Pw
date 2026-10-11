@@ -4,12 +4,15 @@ import {
   ViewChild,
   inject,
   output,
-  signal
+  signal,
+  HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Item, ItemRequest } from '../../../models/item.model';
 import { I18nService } from '../../../services/i18n.service';
+import { ModalScrollLockService } from '../../../services/modal-scroll-lock.service';
 
 @Component({
   selector: 'app-item-modal',
@@ -18,8 +21,10 @@ import { I18nService } from '../../../services/i18n.service';
   templateUrl: './item-modal.component.html',
   styleUrl: './item-modal.component.scss'
 })
-export class ItemModalComponent {
+export class ItemModalComponent implements OnDestroy {
   readonly i18n = inject(I18nService);
+  readonly scrollLock = inject(ModalScrollLockService);
+  private unregisterLock?: () => void;
 
   @ViewChild('modalDialog') modalDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('nameInput') nameInput?: ElementRef<HTMLInputElement>;
@@ -53,11 +58,27 @@ export class ItemModalComponent {
   }
 
   close(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
     if (this.modalDialog?.nativeElement?.open) {
       this.modalDialog.nativeElement.close?.();
     }
     this.isOpen.set(false);
     this.closed.emit();
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterLock?.();
+    this.unregisterLock = undefined;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event?: Event): void {
+    if (this.isOpen()) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      this.close();
+    }
   }
 
   setSubmitting(submitting: boolean): void {
@@ -112,6 +133,9 @@ export class ItemModalComponent {
 
   private openDialog(): void {
     this.isOpen.set(true);
+    if (!this.unregisterLock) {
+      this.unregisterLock = this.scrollLock.register('item-modal', () => this.close());
+    }
     // Open native dialog modal
     setTimeout(() => {
       if (this.modalDialog?.nativeElement && !this.modalDialog.nativeElement.open) {

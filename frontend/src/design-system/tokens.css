@@ -97,8 +97,8 @@ table { font-variant-numeric: tabular-nums; }
 .menu-item:hover { background: var(--sba); }
 .menu-item[aria-current='page'], .menu-item.is-active { background: var(--sba); color: var(--sbac); font-weight: 600; }
 .menu-item .label { flex: 1; }
-.menu-item .chevron { width: 15px; height: 15px; color: var(--sbm); transition: transform .2s; }
-.menu-group.is-open > .menu-item .chevron { transform: rotate(90deg); }
+.menu-item .chevron, .menu-item .chevron-icon { width: 15px; height: 15px; color: var(--sbm); transition: transform .2s; margin-left: auto; }
+.menu-group.is-open > .menu-item .chevron, .menu-group.is-open > .menu-item .chevron-icon { transform: rotate(180deg); }
 .submenu { display: none; margin: 2px 0 6px 18px; padding-left: 10px; border-left: 1px solid var(--sbd); }
 .menu-group.is-open > .submenu { display: block; }
 .submenu .menu-item { padding: 7px 10px; font-weight: 400; font-size: 13.5px; color: var(--sbm); }
@@ -107,9 +107,75 @@ table { font-variant-numeric: tabular-nums; }
 .user-card { margin-top: auto; border-top: 1px solid var(--sbd); padding-top: 12px; display: flex; align-items: center; gap: 10px; }
 .user-card small { display: block; color: var(--sbm); font-size: 12px; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--pri); color: var(--pt); display: grid; place-items: center; font-weight: 700; flex: none; }
-.app.collapsed .label, .app.collapsed .chevron, .app.collapsed .submenu, .app.collapsed .course-switch,
-.app.collapsed .menu-section, .app.collapsed .brand span, .app.collapsed .user-card > div, .app.collapsed .menu-badge { display: none; }
-.app.collapsed .menu-item, .app.collapsed .brand { justify-content: center; }
+
+/* Collapsed rail default state (icons only, down arrow and labels hidden) */
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .label,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .chevron,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .chevron-icon,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .submenu,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .course-switch,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .menu-section,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .brand span,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .user-card > div,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .menu-badge { display: none !important; }
+
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .menu-item,
+.app.collapsed .sidebar:not(:hover):not(.is-hover-expanded) .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+
+/* Desktop hover expansion for collapsed sidebar */
+@media (min-width: 901px) {
+  .app.collapsed .sidebar {
+    width: 74px;
+    overflow-x: hidden;
+    transition: width .22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .22s ease;
+  }
+  .app.collapsed .sidebar:hover,
+  .app.collapsed .sidebar.is-hover-expanded {
+    width: 264px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, .16);
+    z-index: 40;
+  }
+  .app.collapsed .sidebar:hover .menu-item,
+  .app.collapsed .sidebar.is-hover-expanded .menu-item {
+    justify-content: flex-start;
+    padding: 9px 10px;
+  }
+  .app.collapsed .sidebar:hover .brand,
+  .app.collapsed .sidebar.is-hover-expanded .brand {
+    justify-content: flex-start;
+    padding: 4px 8px 14px;
+  }
+  .app.collapsed .sidebar:hover .label,
+  .app.collapsed .sidebar.is-hover-expanded .label {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .app.collapsed .sidebar:hover .brand span,
+  .app.collapsed .sidebar.is-hover-expanded .brand span {
+    display: inline;
+    white-space: nowrap;
+  }
+  .app.collapsed .sidebar:hover .course-switch,
+  .app.collapsed .sidebar.is-hover-expanded .course-switch {
+    display: flex;
+  }
+  .app.collapsed .sidebar:hover .menu-section,
+  .app.collapsed .sidebar.is-hover-expanded .menu-section {
+    display: block;
+    white-space: nowrap;
+  }
+  .app.collapsed .sidebar:hover .chevron,
+  .app.collapsed .sidebar.is-hover-expanded .chevron,
+  .app.collapsed .sidebar:hover .chevron-icon,
+  .app.collapsed .sidebar.is-hover-expanded .chevron-icon {
+    display: block;
+    margin-left: auto;
+  }
+  .app.collapsed .sidebar:hover .menu-group.is-open > .submenu,
+  .app.collapsed .sidebar.is-hover-expanded .menu-group.is-open > .submenu {
+    display: block;
+  }
+}
 
 .topbar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 10px; padding: 10px 24px;
@@ -200,6 +266,25 @@ input[type='checkbox'], input[type='radio'] { accent-color: var(--pri); width: 1
 .dropdown button:hover { background: var(--sf2); }
 .dot { position: absolute; top: -4px; right: -4px; background: var(--bad); color: #fff; font-size: 10px; border-radius: 99px; padding: 0 5px; }
 
+/* ---------- 4.1 Modal Dialogs & Background Scroll Lock ---------- */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+html.modal-open .app,
+body.modal-open .app,
+html.modal-open .app-body,
+body.modal-open .app-body,
+html.modal-open .sidebar,
+body.modal-open .sidebar,
+html.modal-open .main,
+body.modal-open .main {
+  overflow: hidden !important;
+}
+
 dialog {
   position: fixed;
   inset: 0;
@@ -212,6 +297,7 @@ dialog {
   max-height: calc(100dvh - 48px);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--sf);
   color: var(--tx);
   box-shadow: var(--shadow-pop);
@@ -220,6 +306,14 @@ dialog::backdrop {
   background: rgba(15, 23, 42, .55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+dialog .modal-body,
+dialog .modal-content,
+dialog .modal-surface,
+dialog .user-list,
+.app-modal-dialog .modal-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 

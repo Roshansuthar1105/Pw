@@ -146,5 +146,21 @@
   "comp_view_table": "तालिका दृश्य",
   "comp_view_hierarchy": "पदानुक्रम कार्ड",
   "comp_btn_register": "नया घटक जोड़ें",
-  "comp_reset_filters": "रीसेट"
+  "comp_reset_filters": "रीसेट",
+  "tbl_show": "दिखाएं",
+  "tbl_entries": "प्रविष्टियां",
+  "tbl_search": "रिकॉर्ड खोजें...",
+  "tbl_export": "सीएसवी निर्यात",
+  "tbl_sno": "क्र.सं.",
+  "tbl_actions": "क्रियाएं",
+  "tbl_showing": "दिखाया जा रहा है",
+  "tbl_to": "से",
+  "tbl_of": "कुल",
+  "tbl_filtered_from": "कुल में से फ़िल्टर किया गया",
+  "tbl_page": "पृष्ठ",
+  "tbl_prev": "पिछला",
+  "tbl_next": "अगला",
+  "tbl_no_records": "कोई रिकॉर्ड नहीं मिला",
+  "tbl_no_records_desc": "इस समय प्रदर्शित करने के लिए कोई प्रविष्टि नहीं है।",
+  "tbl_clear_search": "खोज फ़िल्टर साफ़ करें"
 }
