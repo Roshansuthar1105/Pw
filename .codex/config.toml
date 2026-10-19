@@ -1,0 +1,5 @@
+[plugins."agent-skills@agent-skills"]
+enabled = true
+
+[plugins."ponytail@agent-skills"]
+enabled = true
