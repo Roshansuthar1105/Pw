@@ -1,0 +1,89 @@
+@if (loading()) {
+  <div class="attempt-loading skeleton" role="status" [attr.aria-label]="i18n.dict().learning_loading"></div>
+} @else if (error() && !attempt()) {
+  <section class="attempt-error" role="alert">
+    <h1>{{ i18n.dict().learning_attempt_error }}</h1>
+    <p>{{ error() }}</p>
+    <a class="btn btn--outline" routerLink="/tests">{{ i18n.dict().attempt_return_tests }}</a>
+  </section>
+} @else if (attempt() && result()) {
+  <main class="result-shell" aria-labelledby="result-title">
+    <nav class="breadcrumb" [attr.aria-label]="i18n.dict().learning_attempt_breadcrumb"><a routerLink="/tests">{{ i18n.dict().learning_tests_title }}</a><span aria-hidden="true">›</span><span aria-current="page">{{ attempt()!.title }}</span></nav>
+    <header class="attempt-header">
+      <a class="back-link" routerLink="/tests">{{ i18n.dict().attempt_return_tests }}</a>
+      <span class="badge badge--neutral">{{ i18n.dict().learning_test_submitted }}</span>
+    </header>
+    <section class="result-card card">
+      <h1 id="result-title">{{ attempt()!.title }}</h1>
+      <p>{{ i18n.dict().learning_result_only }}</p>
+      @if (result()?.score !== null) { <div class="result-score"><span>{{ i18n.dict().learning_test_score }}</span><strong>{{ result()?.score }} / {{ result()?.totalMarks }}</strong></div> }
+      <a class="btn" routerLink="/tests">{{ i18n.dict().attempt_return_tests }}</a>
+    </section>
+  </main>
+} @else if (attempt()) {
+  <main class="attempt-shell" aria-labelledby="attempt-title">
+    <nav class="breadcrumb" [attr.aria-label]="i18n.dict().learning_attempt_breadcrumb"><a routerLink="/tests">{{ i18n.dict().learning_tests_title }}</a><span aria-hidden="true">›</span><span aria-current="page">{{ attempt()!.title }}</span></nav>
+    <header class="attempt-header">
+      <div class="attempt-heading">
+        <button type="button" class="back-link" (click)="exitAttempt()">{{ i18n.dict().attempt_return_tests }}</button>
+        <h1 id="attempt-title">{{ attempt()!.title }}</h1>
+        @if (attempt()!.instructions) { <p>{{ attempt()!.instructions }}</p> }
+      </div>
+      <div class="timer" [class.timer--warning]="remainingSeconds() <= 600 && remainingSeconds() > 60" [class.timer--urgent]="remainingSeconds() <= 60" role="timer" [attr.aria-label]="i18n.dict().attempt_time_remaining">
+        <span>{{ i18n.dict().attempt_time_remaining }}</span><strong>{{ timeDisplay() }}</strong>
+      </div>
+    </header>
+
+    @if (error()) { <div class="alert alert--error" role="alert">{{ error() }}</div> }
+    @if (savedNotice()) { <div class="save-status" role="status" aria-live="polite">{{ savedNotice() }}</div> }
+
+    <div class="attempt-layout">
+      <section class="question-panel card" aria-labelledby="question-counter">
+        @if (currentQuestion(); as question) {
+          <div class="question-panel-heading">
+            <h2 id="question-counter">{{ i18n.dict().attempt_question }} {{ index() + 1 }} / {{ questionCount() }}</h2>
+            <span class="badge badge--neutral">{{ question.marks }} {{ i18n.dict().learning_marks }}</span>
+          </div>
+          <app-math-content class="attempt-prompt" [text]="question.prompt"></app-math-content>
+          @if (question.imageUrl) { <img class="attempt-image" [src]="question.imageUrl" [alt]="i18n.dict().learning_question_image" /> }
+          <fieldset class="answer-options">
+            <legend class="sr-only">{{ i18n.dict().learning_choose_answer }}</legend>
+            @for (option of question.options; track option.key) {
+              <label class="answer-option" [class.is-selected]="answers()[question.id] === option.key">
+                <input type="radio" [name]="'question-' + question.id" [value]="option.key" [checked]="answers()[question.id] === option.key" (change)="choose(question.id, option.key)" />
+                <span class="option-key">{{ option.key }}</span>
+                <app-math-content [text]="option.content"></app-math-content>
+              </label>
+            }
+          </fieldset>
+          <div class="question-navigation">
+            <button type="button" class="btn btn--outline" [disabled]="index() === 0" (click)="previous()">{{ i18n.dict().attempt_previous }}</button>
+            <span>{{ answeredCount() }} {{ i18n.dict().attempt_answered }} / {{ questionCount() }}</span>
+            <button type="button" class="btn btn--outline" [disabled]="index() >= questionCount() - 1" (click)="next()">{{ i18n.dict().attempt_next }}</button>
+          </div>
+        }
+      </section>
+
+      <aside class="question-palette card" [attr.aria-label]="i18n.dict().learning_test_questions">
+        <button type="button" class="palette-toggle" aria-controls="attempt-palette-content" [attr.aria-expanded]="paletteOpen()" (click)="paletteOpen.update(open => !open)">{{ i18n.dict().learning_question_palette }} <span>{{ answeredCount() }} / {{ questionCount() }}</span></button>
+        <div id="attempt-palette-content" class="palette-content" [class.is-open]="paletteOpen()">
+          <h2>{{ i18n.dict().learning_test_questions }}</h2>
+          <p>{{ answeredCount() }} {{ i18n.dict().attempt_answered }} / {{ questionCount() }}</p>
+          <div class="palette-grid">
+            @for (question of attempt()!.questions; track question.id; let questionIndex = $index) {
+              <button type="button" class="palette-item" [class.is-current]="index() === questionIndex" [class.is-answered]="answers()[question.id]" [attr.aria-current]="index() === questionIndex ? 'step' : null" [attr.aria-label]="i18n.dict().learning_question_number + ' ' + (questionIndex + 1)" (click)="goTo(questionIndex)">{{ questionIndex + 1 }}</button>
+            }
+          </div>
+          <div class="palette-legend"><span><i class="legend-dot is-current" aria-hidden="true"></i>{{ i18n.dict().learning_current_question }}</span><span><i class="legend-dot is-answered" aria-hidden="true"></i>{{ i18n.dict().attempt_answered }}</span><span><i class="legend-dot is-unanswered" aria-hidden="true"></i>{{ i18n.dict().attempt_unanswered }}</span></div>
+          <button type="button" class="btn btn--outline save-button" [disabled]="saving() || submitting()" (click)="saveProgress()">{{ saving() ? i18n.dict().learning_progress_saving : i18n.dict().attempt_save }}</button>
+          <button type="button" class="btn submit-button" [disabled]="saving() || submitting()" (click)="requestSubmit()">{{ submitting() ? i18n.dict().learning_submitting : i18n.dict().attempt_submit }}</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+}
+
+<app-modal #submitModal [heading]="i18n.dict().attempt_submit" size="s" [closeAriaLabel]="i18n.dict().modal_close">
+  <p class="confirm-copy">{{ i18n.dict().attempt_submit_confirm }}</p>
+  <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="submitModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" (click)="confirmSubmit()">{{ i18n.dict().attempt_submit }}</button></div>
+</app-modal>

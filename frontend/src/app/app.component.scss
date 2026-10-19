@@ -6,6 +6,26 @@
   min-height: 100vh;
 }
 
+.app.focus-mode {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app.focus-mode .sidebar,
+.app.focus-mode .topbar {
+  display: none !important;
+}
+
+.app.focus-mode .app-body {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.app.focus-mode .main {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
 .menu-group-trigger {
   cursor: pointer;
   width: 100%;

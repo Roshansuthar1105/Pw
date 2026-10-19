@@ -3,7 +3,7 @@
   <router-outlet></router-outlet>
 } @else {
   <!-- Main Platform Shell -->
-  <div class="app" [class.collapsed]="isCollapsed()" [class.drawer-open]="isDrawerOpen()">
+  <div class="app" [class.collapsed]="isCollapsed()" [class.drawer-open]="isDrawerOpen()" [class.focus-mode]="currentUrl().includes('/attempt')">
     <!-- Accessible Skip Link -->
     <a href="#main-content" class="skip-link">{{ i18n.dict().skip_link }}</a>
 
@@ -96,6 +96,7 @@
                   <a
                     [routerLink]="sub.route"
                     routerLinkActive="is-active"
+                    [attr.aria-current]="currentUrl() === sub.route || currentUrl().startsWith(sub.route + '/') ? 'page' : null"
                     class="menu-item submenu-item"
                     [id]="'nav-' + sub.code.toLowerCase()"
                     (click)="closeDrawerOnNav()"

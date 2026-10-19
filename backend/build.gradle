@@ -40,6 +40,10 @@ dependencies {
     // PostgreSQL driver
     runtimeOnly 'org.postgresql:postgresql'
 
+    // Learning content imports
+    implementation 'org.apache.pdfbox:pdfbox:3.0.8'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+
     // Flyway - Database Migration
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'

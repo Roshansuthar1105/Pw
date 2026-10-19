@@ -79,6 +79,9 @@ export class PermissionService {
         if (submenu.route === cleanRoute) {
           return this.permissionCodes().has(submenu.code);
         }
+        if (submenu.route && cleanRoute.startsWith(`${submenu.route}/`)) {
+          return this.permissionCodes().has(submenu.code);
+        }
       }
     }
 

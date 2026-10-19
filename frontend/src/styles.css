@@ -5,9 +5,12 @@
 
 /* Tailwind v4 base import */
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 /* Design system tokens (CSS custom properties) */
 @import "./design-system/tokens.css";
+
+.math-content .katex-display { overflow-x: auto; overflow-y: hidden; padding-block: .25rem; }
 
 /* ==========================================================================
    Tailwind v4 Theme Extensions (@theme)

@@ -1,0 +1,298 @@
+<nav class="breadcrumb" [attr.aria-label]="i18n.dict().learning_breadcrumb">
+  <a routerLink="/">{{ i18n.dict().nav_dashboard }}</a>
+  <span aria-hidden="true">›</span>
+  <span aria-current="page">{{ i18n.dict().learning_title }}</span>
+</nav>
+
+<header class="page-header">
+  <div>
+    <h1>{{ i18n.dict().learning_title }}</h1>
+    <p>{{ i18n.dict().learning_subtitle }}</p>
+  </div>
+  <div class="header-actions">
+    @if (section() === 'resources' && canManageResources()) {
+      <button type="button" class="btn" (click)="openResource()">{{ i18n.dict().learning_add_resource }}</button>
+    } @else if (section() === 'questions' && canAddQuestion()) {
+      <button type="button" class="btn" (click)="openQuestion()">{{ i18n.dict().learning_add_question }}</button>
+    } @else if (section() === 'taxonomy' && canManageTaxonomy()) {
+      <button type="button" class="btn" (click)="openTaxonomy('course')">{{ i18n.dict().learning_add_course }}</button>
+    }
+  </div>
+</header>
+
+<div class="hub-nav" role="tablist" [attr.aria-label]="i18n.dict().learning_title">
+  <button type="button" role="tab" class="hub-tab" [class.is-active]="section() === 'resources'"
+    [attr.aria-selected]="section() === 'resources'" (click)="setSection('resources')">
+    {{ i18n.dict().learning_tab_resources }}
+  </button>
+  @if (canViewQuestions()) {
+    <button type="button" role="tab" class="hub-tab" [class.is-active]="section() === 'questions'"
+      [attr.aria-selected]="section() === 'questions'" (click)="setSection('questions')">
+      {{ i18n.dict().learning_tab_questions }}
+    </button>
+  }
+  @if (permissions.hasPermission('FN_TAXONOMY_VIEW')) {
+    <button type="button" role="tab" class="hub-tab" [class.is-active]="section() === 'taxonomy'"
+      [attr.aria-selected]="section() === 'taxonomy'" (click)="setSection('taxonomy')">
+      {{ i18n.dict().learning_tab_taxonomy }}
+    </button>
+  }
+  @if (permissions.hasPermission('FN_TESTS_VIEW')) {
+    <a class="hub-tab hub-tab-link" routerLink="/tests">{{ i18n.dict().learning_tests_title }}</a>
+  }
+</div>
+
+@if (toast()) {
+  <div class="toast is-visible" role="status" aria-live="polite">{{ toast() }}</div>
+}
+
+@if (error()) {
+  <div class="alert alert--error" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" class="btn btn--outline" (click)="load()">{{ i18n.dict().refresh_btn }}</button>
+  </div>
+}
+
+@if (loading()) {
+  <div class="skeleton learning-skeleton" role="status" [attr.aria-label]="i18n.dict().learning_loading"></div>
+} @else {
+  @if (section() === 'resources') {
+    <section class="section-intro">
+      <div>
+        <h2>{{ i18n.dict().learning_resources_heading }}</h2>
+        <p>{{ i18n.dict().learning_resources_desc }}</p>
+      </div>
+    </section>
+    <div class="filters resource-filters">
+      <label class="search">
+        <span class="sr-only">{{ i18n.dict().learning_search_resources }}</span>
+        <input type="search" class="input" [ngModel]="search()" (ngModelChange)="search.set($event)"
+          [placeholder]="i18n.dict().learning_search_resources" />
+      </label>
+      <select class="input filter-select" [ngModel]="resourceFilter()" (ngModelChange)="resourceFilter.set($event)"
+        [attr.aria-label]="i18n.dict().learning_resource_type">
+        <option value="ALL">{{ i18n.dict().learning_filter_all }}</option>
+        <option value="NOTES">{{ i18n.dict().learning_notes_heading }}</option>
+        <option value="VIDEO">{{ i18n.dict().learning_videos_heading }}</option>
+      </select>
+      @if (courses().length) {
+        <select class="input filter-select" [ngModel]="filterCourseId()" (ngModelChange)="filterCourseId.set($event ? +$event : null); filterSubjectId.set(null)"
+          [attr.aria-label]="i18n.dict().learning_course">
+          <option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>
+          @for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }
+        </select>
+      }
+      @if (filterCourseId()) {
+        <select class="input filter-select" [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event ? +$event : null)"
+          [attr.aria-label]="i18n.dict().learning_subject">
+          <option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>
+          @for (subject of courses().find(c => c.id === filterCourseId())?.subjects ?? []; track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }
+        </select>
+      }
+    </div>
+
+    <section class="resource-section" aria-labelledby="notes-heading">
+      <div class="section-heading"><h2 id="notes-heading">{{ i18n.dict().learning_notes_heading }}</h2><span class="badge badge--neutral">{{ filteredResources().filter(r => r.type === 'NOTES').length }}</span></div>
+      @if (filteredResources().filter(r => r.type === 'NOTES').length) {
+        <div class="resource-grid">
+          @for (resource of filteredResources().filter(r => r.type === 'NOTES'); track resource.id) {
+            <article class="resource-card card">
+              <div class="card-topline"><span class="resource-kind">{{ i18n.dict().learning_resource_notes }}</span>
+                @if (permissions.hasPermission('FN_RESOURCES_EDIT') && permissions.hasPermission('FN_TAXONOMY_VIEW')) { <button type="button" class="text-action" (click)="openResource(resource)">{{ i18n.dict().action_edit }}</button> }
+              </div>
+              <h3>{{ resource.title }}</h3>
+              @if (resource.description) { <p class="resource-description">{{ resource.description }}</p> }
+              <p class="resource-meta">{{ resource.courseName }} <span aria-hidden="true">·</span> {{ resource.subjectName }}@if (resource.topicName) { <span aria-hidden="true">·</span> {{ resource.topicName }} }</p>
+              <div class="resource-actions">
+                <a class="btn btn--outline" [href]="resource.url" target="_blank" rel="noopener noreferrer">{{ i18n.dict().learning_open_resource }}</a>
+                @if (permissions.hasPermission('FN_RESOURCES_DELETE')) {
+                  <button type="button" class="icon-action" (click)="requestDelete('resource', resource.id)" [attr.aria-label]="i18n.dict().action_delete">{{ i18n.dict().action_delete }}</button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="empty"><h3>{{ i18n.dict().learning_notes_empty }}</h3><p>{{ i18n.dict().learning_resources_empty_desc }}</p>@if (canManageResources()) { <button type="button" class="btn btn--outline" (click)="openResource()">{{ i18n.dict().learning_add_first_resource }}</button> }</div>
+      }
+    </section>
+
+    <section class="resource-section" aria-labelledby="videos-heading">
+      <div class="section-heading"><h2 id="videos-heading">{{ i18n.dict().learning_videos_heading }}</h2><span class="badge badge--neutral">{{ filteredResources().filter(r => r.type === 'VIDEO').length }}</span></div>
+      @if (filteredResources().filter(r => r.type === 'VIDEO').length) {
+        <div class="resource-grid">
+          @for (resource of filteredResources().filter(r => r.type === 'VIDEO'); track resource.id) {
+            <article class="resource-card card">
+              <div class="card-topline"><span class="resource-kind">{{ i18n.dict().learning_resource_video }}</span>
+                @if (permissions.hasPermission('FN_RESOURCES_EDIT') && permissions.hasPermission('FN_TAXONOMY_VIEW')) { <button type="button" class="text-action" (click)="openResource(resource)">{{ i18n.dict().action_edit }}</button> }
+              </div>
+              <h3>{{ resource.title }}</h3>
+              @if (resource.description) { <p class="resource-description">{{ resource.description }}</p> }
+              <p class="resource-meta">{{ resource.courseName }} <span aria-hidden="true">·</span> {{ resource.subjectName }}@if (resource.topicName) { <span aria-hidden="true">·</span> {{ resource.topicName }} }</p>
+              <div class="resource-actions">
+                <a class="btn btn--outline" [href]="resource.url" target="_blank" rel="noopener noreferrer">{{ i18n.dict().learning_open_resource }}</a>
+                @if (permissions.hasPermission('FN_RESOURCES_DELETE')) {
+                  <button type="button" class="icon-action" (click)="requestDelete('resource', resource.id)" [attr.aria-label]="i18n.dict().action_delete">{{ i18n.dict().action_delete }}</button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="empty"><h3>{{ i18n.dict().learning_videos_empty }}</h3><p>{{ i18n.dict().learning_resources_empty_desc }}</p>@if (canManageResources()) { <button type="button" class="btn btn--outline" (click)="openResource()">{{ i18n.dict().learning_add_first_resource }}</button> }</div>
+      }
+    </section>
+  }
+
+  @if (section() === 'questions' && canViewQuestions()) {
+    <section class="section-intro">
+      <div><h2>{{ i18n.dict().learning_question_bank_heading }}</h2><p>{{ i18n.dict().learning_question_bank_desc }}</p></div>
+      <div class="section-actions">
+        @if (permissions.hasPermission('FN_QUESTIONS_IMPORT') && permissions.hasPermission('FN_TAXONOMY_VIEW')) { <button type="button" class="btn btn--outline" (click)="startImport()">{{ i18n.dict().learning_import_questions }}</button> }
+      </div>
+    </section>
+    <div class="filters resource-filters">
+      <label class="search"><span class="sr-only">{{ i18n.dict().learning_search_questions }}</span><input type="search" class="input" [ngModel]="search()" (ngModelChange)="search.set($event)" [placeholder]="i18n.dict().learning_search_questions" /></label>
+      @if (courses().length) {
+        <select class="input filter-select" [ngModel]="filterCourseId()" (ngModelChange)="filterCourseId.set($event ? +$event : null); filterSubjectId.set(null)" [attr.aria-label]="i18n.dict().learning_course">
+          <option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>
+          @for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }
+        </select>
+      }
+      @if (filterCourseId()) {
+        <select class="input filter-select" [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event ? +$event : null)" [attr.aria-label]="i18n.dict().learning_subject">
+          <option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>
+          @for (subject of courses().find(c => c.id === filterCourseId())?.subjects ?? []; track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }
+        </select>
+      }
+      <span class="result-count">{{ filteredQuestions().length }} {{ i18n.dict().learning_test_questions_count }}</span>
+    </div>
+    @if (filteredQuestions().length) {
+      <div class="question-grid">
+        @for (question of filteredQuestions(); track question.id) {
+          <article class="question-card card">
+            <div class="card-topline"><span class="resource-kind">{{ question.courseName }} · {{ question.subjectName }}</span><span class="badge badge--neutral">{{ difficultyLabel(question.difficulty) }}</span></div>
+            <app-math-content [text]="question.prompt"></app-math-content>
+            @if (question.imageUrl) { <img class="question-image" [src]="question.imageUrl" [alt]="i18n.dict().learning_question_image" loading="lazy" /> }
+            <ol class="option-list" type="A">@for (option of question.options; track option.key) { <li><app-math-content [text]="option.content"></app-math-content></li> }</ol>
+            <p class="resource-meta">{{ i18n.dict().learning_marks }}: {{ question.marks }}@if (question.topicName) { <span aria-hidden="true">·</span> {{ question.topicName }} }</p>
+            @if (canManageQuestions()) {
+              <div class="resource-actions">
+                @if (permissions.hasPermission('FN_QUESTIONS_EDIT') && permissions.hasPermission('FN_TAXONOMY_VIEW')) { <button type="button" class="btn btn--outline" (click)="openQuestion(question)">{{ i18n.dict().action_edit }}</button> }
+                @if (permissions.hasPermission('FN_QUESTIONS_DELETE')) { <button type="button" class="icon-action" (click)="requestDelete('question', question.id)" [attr.aria-label]="i18n.dict().action_delete">{{ i18n.dict().action_delete }}</button> }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="empty"><h3>{{ i18n.dict().learning_questions_empty }}</h3><p>{{ i18n.dict().learning_questions_empty_desc }}</p>@if (canAddQuestion()) { <button type="button" class="btn btn--outline" (click)="openQuestion()">{{ i18n.dict().learning_add_first_question }}</button> }</div>
+    }
+  }
+
+  @if (section() === 'taxonomy' && permissions.hasPermission('FN_TAXONOMY_VIEW')) {
+    <section class="section-intro"><div><h2>{{ i18n.dict().learning_tab_taxonomy }}</h2><p>{{ i18n.dict().learning_taxonomy_desc }}</p></div></section>
+    @if (courses().length) {
+      <div class="taxonomy-list">
+        @for (course of courses(); track course.id) {
+          <article class="taxonomy-card card">
+            <div class="taxonomy-heading"><div><h3>{{ course.name }}</h3>@if (course.description) { <p>{{ course.description }}</p> }</div>
+              @if (canManageTaxonomy()) { <div class="taxonomy-actions"><button type="button" class="text-action" (click)="openTaxonomy('course', undefined, course)">{{ i18n.dict().action_edit }}</button><button type="button" class="text-action" (click)="openTaxonomy('subject', course.id)">{{ i18n.dict().learning_add_subject }}</button><button type="button" class="text-action is-danger" (click)="requestDelete('course', course.id)">{{ i18n.dict().learning_archive }}</button></div> }
+            </div>
+            @for (subject of course.subjects; track subject.id) {
+              <div class="taxonomy-subject"><div class="taxonomy-heading"><h4>{{ subject.name }}</h4>
+                @if (canManageTaxonomy()) { <div class="taxonomy-actions"><button type="button" class="text-action" (click)="openTaxonomy('subject', course.id, subject)">{{ i18n.dict().action_edit }}</button><button type="button" class="text-action" (click)="openTaxonomy('topic', subject.id)">{{ i18n.dict().learning_add_topic }}</button><button type="button" class="text-action is-danger" (click)="requestDelete('subject', subject.id)">{{ i18n.dict().learning_archive }}</button></div> }
+              </div>
+              @if (subject.topics.length) { <div class="topic-list">@for (topic of subject.topics; track topic.id) { <span class="topic-pill">{{ topic.name }}@if (canManageTaxonomy()) { <button type="button" (click)="openTaxonomy('topic', subject.id, topic)" [attr.aria-label]="i18n.dict().action_edit">{{ i18n.dict().action_edit }}</button><button type="button" class="is-danger" (click)="requestDelete('topic', topic.id)" [attr.aria-label]="i18n.dict().learning_archive">{{ i18n.dict().learning_archive }}</button> }</span> }</div> }
+            </div>
+          }
+        </article>
+      }
+      </div>
+    } @else {
+      <div class="empty"><h3>{{ i18n.dict().learning_taxonomy_empty }}</h3><p>{{ i18n.dict().learning_taxonomy_empty_desc }}</p>@if (canManageTaxonomy()) { <button type="button" class="btn btn--outline" (click)="openTaxonomy('course')">{{ i18n.dict().learning_add_course }}</button> }</div>
+    }
+  }
+}
+
+<app-modal #editorModal [heading]="editorHeading()" size="xl" [closeAriaLabel]="i18n.dict().modal_close">
+  @if (formError()) { <div class="alert alert--error" role="alert">{{ formError() }}</div> }
+  @if (editorKind() === 'resource') {
+    <div class="editor-fields">
+      <div class="field"><label for="resource-type">{{ i18n.dict().learning_resource_type }}</label><select id="resource-type" class="input" [ngModel]="resourceType()" (ngModelChange)="resourceType.set($event)"><option value="NOTES">{{ i18n.dict().learning_resource_notes }}</option><option value="VIDEO">{{ i18n.dict().learning_resource_video }}</option></select></div>
+      <div class="field"><label for="resource-title">{{ i18n.dict().learning_resource_title }}</label><input id="resource-title" class="input" [ngModel]="resourceTitle()" (ngModelChange)="resourceTitle.set($event)" /></div>
+      <div class="field"><label for="resource-url">{{ resourceType() === 'VIDEO' ? i18n.dict().learning_youtube_url : i18n.dict().learning_resource_url }}</label><input id="resource-url" class="input" type="url" [ngModel]="resourceUrl()" (ngModelChange)="resourceUrl.set($event)" placeholder="https://" /></div>
+      <div class="field"><label for="resource-description">{{ i18n.dict().learning_resource_description }}</label><textarea id="resource-description" class="input" rows="3" [ngModel]="resourceDescription()" (ngModelChange)="resourceDescription.set($event)"></textarea></div>
+      <div class="form-row">
+        <div class="field"><label for="resource-course">{{ i18n.dict().learning_course }}</label><select id="resource-course" class="input" [ngModel]="courseId()" (ngModelChange)="courseId.set(+$event); subjectId.set(courses().find(c => c.id === +$event)?.subjects?.[0]?.id ?? null); topicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>@for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }</select></div>
+        <div class="field"><label for="resource-subject">{{ i18n.dict().learning_subject }}</label><select id="resource-subject" class="input" [ngModel]="subjectId()" (ngModelChange)="subjectId.set(+$event); topicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>@for (subject of subjectsForForm(); track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div>
+        <div class="field"><label for="resource-topic">{{ i18n.dict().learning_topic }}</label><select id="resource-topic" class="input" [ngModel]="topicId()" (ngModelChange)="topicId.set($event ? +$event : null)"><option [ngValue]="null">{{ i18n.dict().learning_select_topic }}</option>@for (topic of topicsForForm(); track topic.id) { <option [ngValue]="topic.id">{{ topic.name }}</option> }</select></div>
+      </div>
+      <label class="check-row"><input type="checkbox" [ngModel]="resourcePublished()" (ngModelChange)="resourcePublished.set($event)" />{{ i18n.dict().learning_resource_published }}</label>
+    </div>
+  }
+  @if (editorKind() === 'resource') {
+    <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="editorModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" [disabled]="saving()" (click)="saveResource()">{{ i18n.dict().btn_save }}</button></div>
+  }
+  @if (editorKind() === 'question') {
+    <div class="editor-fields">
+      <div class="form-row">
+        <div class="field"><label for="question-course">{{ i18n.dict().learning_course }}</label><select id="question-course" class="input" [ngModel]="courseId()" (ngModelChange)="courseId.set(+$event); subjectId.set(courses().find(c => c.id === +$event)?.subjects?.[0]?.id ?? null); topicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>@for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }</select></div>
+        <div class="field"><label for="question-subject">{{ i18n.dict().learning_subject }}</label><select id="question-subject" class="input" [ngModel]="subjectId()" (ngModelChange)="subjectId.set(+$event); topicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>@for (subject of subjectsForForm(); track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div>
+        <div class="field"><label for="question-topic">{{ i18n.dict().learning_topic }}</label><select id="question-topic" class="input" [ngModel]="topicId()" (ngModelChange)="topicId.set($event ? +$event : null)"><option [ngValue]="null">{{ i18n.dict().learning_select_topic }}</option>@for (topic of topicsForForm(); track topic.id) { <option [ngValue]="topic.id">{{ topic.name }}</option> }</select></div>
+      </div>
+      <div class="field"><label for="question-prompt">{{ i18n.dict().learning_question_prompt }}</label><textarea id="question-prompt" class="input" rows="4" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)"></textarea><div class="math-preview"><span class="label">{{ i18n.dict().learning_preview_math }}</span><app-math-content [text]="prompt()"></app-math-content></div></div>
+      <div class="field"><label for="question-image-url">{{ i18n.dict().learning_question_image }}</label><input id="question-image-url" class="input" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" placeholder="https://" />@if (imageUrl()) { <img class="question-image" [src]="imageUrl()" [alt]="i18n.dict().learning_question_image" /> }</div>
+      <div class="option-editor"><div class="section-heading"><h3>{{ i18n.dict().learning_question_options }}</h3>@if (optionTexts().length < 6) { <button type="button" class="btn btn--outline" (click)="addOption()">{{ i18n.dict().learning_add_option }}</button> }</div>
+        @for (option of optionTexts(); track $index) {
+          <div class="option-row"><label class="correct-choice"><input type="radio" name="correctOption" [checked]="correctOption() === optionKey($index)" (change)="correctOption.set(optionKey($index))" [attr.aria-label]="i18n.dict().learning_correct_answer + ' ' + optionKey($index)" /></label><span class="option-key">{{ optionKey($index) }}</span><input class="input" [ngModel]="option" (ngModelChange)="setOption($index, $event)" [attr.aria-label]="i18n.dict().learning_option + ' ' + optionKey($index)" />@if (optionTexts().length > 2) { <button type="button" class="icon-action" (click)="removeOption($index)" [attr.aria-label]="i18n.dict().learning_remove_option">{{ i18n.dict().learning_remove_option }}</button> }</div>
+        }
+      </div>
+      <div class="form-row"><div class="field"><label for="question-answer">{{ i18n.dict().learning_correct_answer }}</label><select id="question-answer" class="input" [ngModel]="correctOption()" (ngModelChange)="correctOption.set($event)">@for (option of optionTexts(); track $index) { <option [value]="optionKey($index)">{{ optionKey($index) }}</option> }</select></div><div class="field"><label for="question-marks">{{ i18n.dict().learning_marks }}</label><input id="question-marks" type="number" min="1" class="input" [ngModel]="marks()" (ngModelChange)="marks.set(+$event)" /></div><div class="field"><label for="question-difficulty">{{ i18n.dict().learning_difficulty }}</label><select id="question-difficulty" class="input" [ngModel]="difficulty()" (ngModelChange)="difficulty.set($event)"><option value="EASY">{{ i18n.dict().learning_easy }}</option><option value="MEDIUM">{{ i18n.dict().learning_medium }}</option><option value="HARD">{{ i18n.dict().learning_hard }}</option></select></div></div>
+      <div class="field"><label for="question-explanation">{{ i18n.dict().learning_question_explanation }}</label><textarea id="question-explanation" class="input" rows="3" [ngModel]="explanation()" (ngModelChange)="explanation.set($event)"></textarea></div>
+    </div>
+  }
+  @if (editorKind() === 'question') {
+    <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="editorModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" [disabled]="saving()" (click)="saveQuestion()">{{ i18n.dict().btn_save }}</button></div>
+  }
+  @if (editorKind() === 'taxonomy') {
+    <div class="editor-fields">
+      @if (taxonomyKind() === 'subject') { <div class="field"><label for="taxonomy-course">{{ i18n.dict().learning_course }}</label><select id="taxonomy-course" class="input" [ngModel]="courseId()" (ngModelChange)="courseId.set(+$event)"><option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>@for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }</select></div> }
+      @if (taxonomyKind() === 'topic') { <div class="field"><label for="taxonomy-subject">{{ i18n.dict().learning_subject }}</label><select id="taxonomy-subject" class="input" [ngModel]="subjectId()" (ngModelChange)="subjectId.set(+$event)"><option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>@for (subject of subjectsForForm(); track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div> }
+      <div class="field"><label for="taxonomy-name">{{ i18n.dict().learning_name }}</label><input id="taxonomy-name" class="input" [ngModel]="name()" (ngModelChange)="name.set($event)" /></div>
+      @if (taxonomyKind() === 'course') { <div class="field"><label for="taxonomy-description">{{ i18n.dict().learning_course_description }}</label><textarea id="taxonomy-description" class="input" rows="3" [ngModel]="courseDescription()" (ngModelChange)="courseDescription.set($event)"></textarea></div> }
+    </div>
+  }
+  @if (editorKind() === 'taxonomy') {
+    <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="editorModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" [disabled]="saving()" (click)="saveTaxonomy()">{{ i18n.dict().btn_save }}</button></div>
+  }
+  @if (editorKind() === 'confirm') {
+    <p class="confirm-copy">{{ i18n.dict().learning_delete_confirm }}</p>
+  }
+  @if (editorKind() === 'confirm') {
+    <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="editorModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn btn--danger" [disabled]="saving()" (click)="confirmDelete()">{{ i18n.dict().action_delete }}</button></div>
+  }
+</app-modal>
+
+<app-modal #importModal [heading]="i18n.dict().learning_import_title" size="xl" [closeAriaLabel]="i18n.dict().modal_close">
+  <div class="editor-fields import-editor">
+    <p class="modal-subtitle">{{ i18n.dict().learning_import_desc }}</p>
+    <div class="field"><label for="import-file">{{ i18n.dict().learning_import_choose_file }}</label><input id="import-file" class="input" type="file" accept=".pdf,.csv,.xlsx,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onImportFile($event)" /><small>{{ importFileName() }}</small></div>
+    @if (importPreviewing()) { <div class="skeleton import-preview-skeleton" role="status" [attr.aria-label]="i18n.dict().learning_import_preview"></div> }
+    @if (importError()) { <div class="alert alert--error" role="alert">{{ importError() }}</div> }
+    @if (importRows().length) {
+      <div class="form-row"><div class="field"><label for="import-course">{{ i18n.dict().learning_course }}</label><select id="import-course" class="input" [ngModel]="importCourseId()" (ngModelChange)="importCourseId.set(+$event); importSubjectId.set(courses().find(c => c.id === +$event)?.subjects?.[0]?.id ?? null); importTopicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>@for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }</select></div><div class="field"><label for="import-subject">{{ i18n.dict().learning_subject }}</label><select id="import-subject" class="input" [ngModel]="importSubjectId()" (ngModelChange)="importSubjectId.set(+$event); importTopicId.set(null)"><option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>@for (subject of importSubjects(); track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div><div class="field"><label for="import-topic">{{ i18n.dict().learning_topic }}</label><select id="import-topic" class="input" [ngModel]="importTopicId()" (ngModelChange)="importTopicId.set($event ? +$event : null)"><option [ngValue]="null">{{ i18n.dict().learning_select_topic }}</option>@for (topic of importTopics(); track topic.id) { <option [ngValue]="topic.id">{{ topic.name }}</option> }</select></div></div>
+      <div class="import-rows">@for (row of importRows(); track $index; let rowIndex = $index) {
+        <article class="import-row card"><div class="card-topline"><span class="resource-kind">{{ i18n.dict().learning_import_source }} · {{ row.source }}</span>@if (row.errors.length) { <span class="badge badge--warn">{{ i18n.dict().learning_import_errors }}</span> }</div>
+          <div class="field"><label [for]="'import-prompt-' + $index">{{ i18n.dict().learning_question_prompt }}</label><textarea [id]="'import-prompt-' + $index" class="input" rows="3" [ngModel]="row.prompt" (ngModelChange)="updateImportRow($index, 'prompt', $event)"></textarea><app-math-content [text]="row.prompt"></app-math-content></div>
+          <div class="field"><label [for]="'import-image-' + $index">{{ i18n.dict().learning_question_image }}</label><input [id]="'import-image-' + $index" class="input" type="url" [ngModel]="row.imageUrl" (ngModelChange)="updateImportRow($index, 'imageUrl', $event)" /></div>
+          <div class="import-option-list">@for (option of row.options; track $index) { <div class="option-row"><span class="option-key">{{ option.key }}</span><input class="input" [ngModel]="option.content" (ngModelChange)="updateImportOption(rowIndex, $index, $event)" [attr.aria-label]="i18n.dict().learning_option + ' ' + option.key" /></div> }</div>
+          <div class="form-row"><div class="field"><label [for]="'import-answer-' + $index">{{ i18n.dict().learning_correct_answer }}</label><select [id]="'import-answer-' + $index" class="input" [ngModel]="row.correctOption" (ngModelChange)="updateImportRow($index, 'correctOption', $event)"><option value="">{{ i18n.dict().learning_correct_answer }}</option>@for (option of row.options; track option.key) { <option [value]="option.key">{{ option.key }}</option> }</select></div><div class="field"><label [for]="'import-marks-' + $index">{{ i18n.dict().learning_marks }}</label><input [id]="'import-marks-' + $index" type="number" min="1" class="input" [ngModel]="row.marks" (ngModelChange)="updateImportRow($index, 'marks', +$event)" /></div><div class="field"><label [for]="'import-difficulty-' + $index">{{ i18n.dict().learning_difficulty }}</label><select [id]="'import-difficulty-' + $index" class="input" [ngModel]="row.difficulty" (ngModelChange)="updateImportRow($index, 'difficulty', $event)"><option value="EASY">{{ i18n.dict().learning_easy }}</option><option value="MEDIUM">{{ i18n.dict().learning_medium }}</option><option value="HARD">{{ i18n.dict().learning_hard }}</option></select></div></div>
+          <div class="field"><label [for]="'import-explanation-' + $index">{{ i18n.dict().learning_question_explanation }}</label><textarea [id]="'import-explanation-' + $index" class="input" rows="2" [ngModel]="row.explanation" (ngModelChange)="updateImportRow($index, 'explanation', $event)"></textarea></div>
+          @if (row.errors.length) { <ul class="row-errors">@for (issue of row.errors; track issue) { <li>{{ issue }}</li> }</ul> }
+        </article>
+      }</div>
+      <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="importModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" [disabled]="saving() || importHasErrors()" (click)="saveImportedQuestions()">{{ i18n.dict().learning_import_save }}</button></div>
+    } @else if (!importError()) { <div class="empty import-empty"><p>{{ i18n.dict().learning_import_empty }}</p></div> }
+  </div>
+</app-modal>

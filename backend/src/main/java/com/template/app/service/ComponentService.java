@@ -145,7 +145,10 @@ public class ComponentService {
 
     @Transactional
     public void bootstrapDefaultPlatformComponents() {
-        if (!componentRepository.findAll().isEmpty()) {
+        // The learning module is introduced by a database migration before this
+        // bootstrap may be called. Use the dashboard anchor so its presence does
+        // not prevent the original default tree from being initialized.
+        if (componentRepository.existsByCode("MENU_DASHBOARD")) {
             return;
         }
 

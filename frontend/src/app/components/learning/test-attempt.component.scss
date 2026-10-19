@@ -1,0 +1,73 @@
+:host { display: block; width: 100%; min-width: 0; }
+.attempt-shell, .result-shell { display: grid; gap: 1rem; width: 100%; min-width: 0; padding: clamp(1rem, 2vw, 2rem); }
+.breadcrumb { display: flex; align-items: center; gap: .5rem; color: var(--mu); overflow-wrap: anywhere; }
+.breadcrumb a { color: inherit; text-decoration: none; }
+.breadcrumb a:hover { color: var(--pri); }
+.attempt-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--bd); }
+.attempt-heading { display: grid; gap: .5rem; min-width: 0; }
+.attempt-heading h1, .result-card h1 { margin: 0; font-size: 1.5rem; overflow-wrap: anywhere; }
+.attempt-heading p { margin: 0; color: var(--mu); }
+.back-link { justify-self: start; min-height: 2.5rem; padding: .5rem .7rem; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--pri); font: inherit; text-decoration: none; cursor: pointer; }
+.back-link:hover { background: var(--sf2); }
+.timer { display: grid; justify-items: end; gap: .2rem; padding: .65rem .85rem; border: 1px solid var(--bd); border-radius: var(--r); background: var(--sf); color: var(--mu); flex: none; }
+.timer strong { color: var(--tx); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.timer--warning { border-color: var(--wn); color: var(--wn); }
+.timer--warning strong { color: var(--wn); }
+.timer--urgent { border-color: var(--bad); color: var(--bad); }
+.timer--urgent strong { color: var(--bad); }
+.attempt-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 21rem); align-items: start; gap: 1rem; min-width: 0; }
+.question-panel, .question-palette, .result-card { min-width: 0; padding: 1.25rem; border: 1px solid var(--bd); border-radius: var(--r); background: var(--sf); }
+.question-panel { display: grid; gap: 1.25rem; }
+.question-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.question-panel-heading h2, .question-palette h2 { margin: 0; font-size: 1rem; }
+.attempt-prompt { font-size: 1.1rem; }
+.attempt-image { display: block; max-width: 100%; max-height: 50vh; object-fit: contain; border: 1px solid var(--bd); border-radius: var(--r); }
+.answer-options { display: grid; gap: .65rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.answer-option { display: flex; align-items: flex-start; gap: .7rem; min-height: 2.75rem; padding: .75rem; border: 1px solid var(--bd); border-radius: var(--r-ctl); background: var(--sf); cursor: pointer; }
+.answer-option.is-selected { border-color: var(--pri); background: var(--sf2); }
+.answer-option input { width: 1.2rem; height: 1.2rem; margin: .1rem 0 0; accent-color: var(--pri); flex: none; }
+.answer-option app-math-content { min-width: 0; flex: 1; }
+.option-key { display: grid; place-items: center; min-width: 2rem; min-height: 2rem; border: 1px solid var(--bd); border-radius: var(--r-ctl); color: var(--mu); font-weight: 600; flex: none; }
+.question-navigation { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding-top: 1rem; border-top: 1px solid var(--bd); }
+.question-navigation span, .question-palette p { color: var(--mu); font-size: .875rem; text-align: center; }
+.question-palette { display: grid; gap: .75rem; }
+.palette-toggle { display: none; }
+.palette-content { display: grid; gap: .75rem; min-width: 0; }
+.palette-content h2 { margin: 0; font-size: 1rem; }
+.palette-content p { margin: 0; color: var(--mu); font-size: .875rem; }
+.palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); gap: .5rem; }
+.palette-item { min-width: 2.75rem; min-height: 2.75rem; border: 1px solid var(--bd); border-radius: var(--r-ctl); background: var(--sf); color: var(--tx); font: inherit; cursor: pointer; }
+.palette-item:hover { border-color: var(--pri); }
+.palette-item.is-answered { background: var(--sf2); border-color: var(--pri); }
+.palette-item.is-current { outline: var(--focus); outline-offset: 2px; }
+.palette-legend { display: grid; gap: .3rem; color: var(--mu); font-size: .8rem; }
+.palette-legend span { display: flex; align-items: center; gap: .45rem; }
+.legend-dot { width: .7rem; height: .7rem; border: 1px solid var(--bd); border-radius: 50%; background: var(--sf); }
+.legend-dot.is-current { border: 2px solid var(--pri); }
+.legend-dot.is-answered { border-color: var(--pri); background: var(--sf2); }
+.save-button, .submit-button { width: 100%; }
+.save-status { color: var(--mu); font-size: .875rem; }
+.alert { margin: 0; }
+.attempt-loading { min-height: 45vh; border-radius: var(--r); background: var(--sf2); }
+.attempt-error { display: grid; justify-items: start; gap: .75rem; padding: 2rem; }
+.attempt-error h1, .attempt-error p { margin: 0; }
+.attempt-error p, .result-card p { color: var(--mu); }
+.result-card { display: grid; justify-items: start; gap: 1rem; }
+.result-score { display: grid; gap: .2rem; }
+.result-score span { color: var(--mu); }
+.result-score strong { font-size: 2rem; font-variant-numeric: tabular-nums; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+.confirm-copy { color: var(--mu); }
+
+@media (max-width: 48rem) {
+  .attempt-header { flex-direction: column; }
+  .timer { justify-items: start; }
+  .attempt-layout { grid-template-columns: minmax(0, 1fr); }
+  .question-palette { position: sticky; bottom: 0; order: 2; z-index: 1; padding: .75rem; border-radius: var(--r-dlg) var(--r-dlg) 0 0; }
+  .palette-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 2.75rem; padding: .5rem .65rem; border: 1px solid var(--bd); border-radius: var(--r-ctl); background: var(--sf); color: var(--tx); font: inherit; text-align: left; cursor: pointer; }
+  .palette-content { display: none; }
+  .palette-content.is-open { display: grid; max-height: 50dvh; overflow-y: auto; }
+  .question-navigation { flex-wrap: wrap; }
+  .question-navigation span { order: -1; width: 100%; }
+  .question-navigation .btn { flex: 1 1 auto; }
+}

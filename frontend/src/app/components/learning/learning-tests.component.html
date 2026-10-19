@@ -1,0 +1,134 @@
+<nav class="breadcrumb" [attr.aria-label]="i18n.dict().learning_tests_breadcrumb">
+  <a routerLink="/">{{ i18n.dict().nav_dashboard }}</a>
+  <span aria-hidden="true">›</span>
+  <span aria-current="page">{{ i18n.dict().learning_tests_title }}</span>
+</nav>
+
+<header class="page-header">
+  <div>
+    <h1>{{ i18n.dict().learning_tests_title }}</h1>
+    <p>{{ i18n.dict().learning_tests_subtitle }}</p>
+  </div>
+  @if (canBuild()) {
+    <button type="button" class="btn" (click)="openCreate()">{{ i18n.dict().learning_test_create }}</button>
+  }
+</header>
+
+@if (toast()) { <div class="toast is-visible" role="status" aria-live="polite">{{ toast() }}</div> }
+@if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
+@if (error()) {
+  <div class="alert alert--error" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" class="btn btn--outline" (click)="load()">{{ i18n.dict().refresh_btn }}</button>
+  </div>
+}
+
+@if (loading()) {
+  <div class="skeleton tests-skeleton" role="status" [attr.aria-label]="i18n.dict().learning_loading"></div>
+} @else if (tests().length) {
+  <section class="test-grid" [attr.aria-label]="i18n.dict().learning_tests_title">
+    @for (test of tests(); track test.id) {
+      <article class="test-card card">
+        <div class="test-card-topline">
+          @if (test.published) { <span class="badge badge--ok">{{ i18n.dict().learning_test_published }}</span> }
+          @else { <span class="badge badge--neutral">{{ i18n.dict().learning_test_draft }}</span> }
+          @if (isStudent() && availability(test) === 'upcoming') { <span class="badge badge--neutral">{{ i18n.dict().learning_test_upcoming }}</span> }
+          @if (isStudent() && availability(test) === 'closed') { <span class="badge badge--warn">{{ i18n.dict().learning_test_closed }}</span> }
+        </div>
+        <h2>{{ test.title }}</h2>
+        @if (test.instructions) { <p class="test-instructions">{{ test.instructions }}</p> }
+        <p class="test-meta">{{ test.courseName }} <span aria-hidden="true">·</span> {{ test.subjectName }}</p>
+        <div class="test-facts">
+          <span>{{ test.questionCount }} {{ i18n.dict().learning_test_questions_count }}</span>
+          <span>{{ test.totalMarks }} {{ i18n.dict().learning_test_total_marks }}</span>
+          <span>{{ test.durationMinutes }} {{ i18n.dict().learning_minutes }}</span>
+        </div>
+        @if (test.availableFrom || test.availableUntil) {
+          <div class="test-window">
+            @if (test.availableFrom) { <span>{{ i18n.dict().learning_test_available_from }}: {{ formatDate(test.availableFrom) }}</span> }
+            @if (test.availableUntil) { <span>{{ i18n.dict().learning_test_available_until }}: {{ formatDate(test.availableUntil) }}</span> }
+          </div>
+        }
+
+        @if (isStudent() && canAttempt()) {
+          @if (test.attemptStatus === 'SUBMITTED') {
+            <div class="attempt-status" role="status">
+              <span class="badge badge--neutral">{{ i18n.dict().learning_test_submitted }}</span>
+              @if (test.score !== null) { <strong>{{ i18n.dict().learning_test_score }}: {{ test.score }} / {{ test.totalMarks }}</strong> }
+              <small>{{ i18n.dict().learning_result_only }}</small>
+            </div>
+          } @else if (test.attemptStatus === 'IN_PROGRESS') {
+            <button type="button" class="btn" [disabled]="test.attemptStatus !== 'IN_PROGRESS' && availability(test) !== 'open'" (click)="begin(test)">{{ i18n.dict().learning_test_resume }}</button>
+          } @else {
+            <button type="button" class="btn" [disabled]="availability(test) !== 'open'" (click)="begin(test)">{{ i18n.dict().learning_test_start }}</button>
+          }
+        } @else if (!isStudent()) {
+          <div class="test-actions">
+            @if (canEdit()) { <button type="button" class="btn btn--outline" [disabled]="test.attemptStatus !== null" (click)="openEdit(test)">{{ i18n.dict().learning_test_edit }}</button> }
+            @if (!test.published && canPublish()) { <button type="button" class="btn" (click)="publish(test)">{{ i18n.dict().learning_test_publish }}</button> }
+            @if (canDelete()) { <button type="button" class="text-action is-danger" (click)="requestDelete(test)">{{ i18n.dict().action_delete }}</button> }
+          </div>
+        }
+      </article>
+    }
+  </section>
+} @else {
+  <div class="empty">
+    <h2>{{ i18n.dict().learning_test_empty }}</h2>
+    <p>{{ i18n.dict().learning_test_empty_desc }}</p>
+    @if (canBuild()) { <button type="button" class="btn btn--outline" (click)="openCreate()">{{ i18n.dict().learning_test_create }}</button> }
+  </div>
+}
+
+<app-modal #testModal [heading]="editingId() ? i18n.dict().learning_test_edit : i18n.dict().learning_test_create" size="xl" [closeAriaLabel]="i18n.dict().modal_close">
+  @if (dialogKind() === 'editor') {
+    <div class="editor-fields test-editor">
+      @if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
+      <div class="field"><label for="test-title">{{ i18n.dict().learning_test_title }}</label><input id="test-title" class="input" maxlength="160" [ngModel]="title()" (ngModelChange)="title.set($event)" /></div>
+      <div class="form-row">
+        <div class="field"><label for="test-course">{{ i18n.dict().learning_course }}</label>
+          <select id="test-course" class="input" [ngModel]="courseId()" (ngModelChange)="onCourseChange($event ? +$event : null)">
+            <option [ngValue]="null">{{ i18n.dict().learning_select_course }}</option>
+            @for (course of courses(); track course.id) { <option [ngValue]="course.id">{{ course.name }}</option> }
+          </select>
+        </div>
+        <div class="field"><label for="test-subject">{{ i18n.dict().learning_subject }}</label>
+          <select id="test-subject" class="input" [ngModel]="subjectId()" (ngModelChange)="onSubjectChange($event ? +$event : null)">
+            <option [ngValue]="null">{{ i18n.dict().learning_select_subject }}</option>
+            @for (subject of subjects(); track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="field"><label for="test-instructions">{{ i18n.dict().learning_test_instructions }}</label><textarea id="test-instructions" class="input" rows="3" [ngModel]="instructions()" (ngModelChange)="instructions.set($event)"></textarea></div>
+      <div class="form-row schedule-row">
+        <div class="field"><label for="test-duration">{{ i18n.dict().learning_test_duration }}</label><input id="test-duration" type="number" min="1" max="600" class="input" [ngModel]="durationMinutes()" (ngModelChange)="durationMinutes.set(+$event)" /></div>
+        <div class="field"><label for="test-from">{{ i18n.dict().learning_test_available_from }}</label><input id="test-from" type="datetime-local" class="input" [ngModel]="availableFrom()" (ngModelChange)="availableFrom.set($event)" /></div>
+        <div class="field"><label for="test-until">{{ i18n.dict().learning_test_available_until }}</label><input id="test-until" type="datetime-local" class="input" [ngModel]="availableUntil()" (ngModelChange)="availableUntil.set($event)" /></div>
+      </div>
+      <section class="question-picker" aria-labelledby="question-picker-heading">
+        <div class="section-heading"><h2 id="question-picker-heading">{{ i18n.dict().learning_test_questions }}</h2><span class="badge badge--neutral">{{ selectedCount() }} {{ i18n.dict().learning_test_selected_count }}</span></div>
+        @if (selectableQuestions().length) {
+          <div class="question-list">
+            @for (question of selectableQuestions(); track question.id) {
+              <label class="question-choice" [class.is-selected]="isSelected(question.id)">
+                <input type="checkbox" [checked]="isSelected(question.id)" (change)="toggleQuestion(question.id, $any($event.target).checked)" />
+                <span class="question-choice-content"><app-math-content [text]="question.prompt"></app-math-content><small>{{ question.marks }} {{ i18n.dict().learning_marks }} · {{ difficultyLabel(question.difficulty) }}</small></span>
+              </label>
+            }
+          </div>
+        } @else {
+          <div class="empty compact-empty"><p>{{ i18n.dict().learning_questions_empty_desc }}</p></div>
+        }
+      </section>
+    </div>
+  }
+  @if (dialogKind() === 'editor') {
+    <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="testModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn" [disabled]="saving()" (click)="saveTest()">{{ i18n.dict().btn_save }}</button></div>
+  }
+</app-modal>
+
+<app-modal #deleteModal [heading]="i18n.dict().dlg_delete_title" size="s" [closeAriaLabel]="i18n.dict().modal_close">
+  <p class="confirm-copy">{{ i18n.dict().learning_delete_confirm }}</p>
+  @if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
+  <div class="dialog-actions"><button type="button" class="btn btn--outline" (click)="deleteModal?.close()">{{ i18n.dict().btn_cancel }}</button><button type="button" class="btn btn--danger" [disabled]="saving()" (click)="confirmDelete()">{{ i18n.dict().action_delete }}</button></div>
+</app-modal>
